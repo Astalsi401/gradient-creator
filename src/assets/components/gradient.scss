@@ -1,0 +1,51 @@
+.gradient {
+  width: 100%;
+  height: 150px;
+  background: var(--gradient);
+  &:hover,
+  &:has(.copy.active) {
+    .copy {
+      opacity: 1;
+    }
+  }
+}
+.copy {
+  cursor: pointer;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  .gradient-code {
+    transition: 0.2s;
+    position: relative;
+    background-color: var(--code-bg);
+    &::before {
+      transition: 0.2s;
+      content: "Copied";
+      position: absolute;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      color: transparent;
+    }
+  }
+  &:hover {
+    .gradient-code {
+      scale: 1.02;
+    }
+  }
+  &:active {
+    .gradient-code {
+      scale: 1;
+    }
+  }
+  &.active {
+    .gradient-code {
+      color: transparent;
+      &::before {
+        color: var(--black);
+      }
+    }
+  }
+}

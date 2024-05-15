@@ -1,0 +1,83 @@
+.hsl-color-picker {
+  --shadow: 0 0 2px var(--black-600);
+  --bar-height: 10px;
+  input[type="number"] {
+    border: 0;
+    outline: 0;
+    background-color: var(--code-bg);
+    box-shadow: inset var(--shadow);
+    width: 60px;
+  }
+  input[type="range"] {
+    cursor: pointer;
+    background-color: transparent;
+    overflow: hidden;
+    position: relative;
+    &::-webkit-slider-runnable-track,
+    &::-moz-range-track {
+      height: var(--bar-height);
+      border-radius: calc(var(--bar-height) / 2);
+      box-shadow: inset var(--shadow);
+      background-color: transparent;
+    }
+    &::-webkit-slider-thumb,
+    &::-moz-range-thumb {
+      appearance: none;
+      width: calc(var(--bar-height) * 1.5);
+      height: calc(var(--bar-height) * 1.5);
+      background-color: var(--code-bg);
+      border-radius: 50%;
+    }
+  }
+}
+.hue-container {
+  --py: 50px;
+  --px: 15px;
+  padding: var(--py) var(--px);
+}
+.hue {
+  width: min(100%, 400px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(hsl(0, 100%, var(--l)), hsl(60, 100%, var(--l)), hsl(120, 100%, var(--l)), hsl(180, 100%, var(--l)), hsl(240, 100%, var(--l)), hsl(300, 100%, var(--l)), hsl(0, 100%, var(--l)));
+  display: grid;
+  place-items: center;
+  position: relative;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+  }
+  &::before {
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, hsl(0, 0%, var(--l)), transparent);
+    border-radius: 50%;
+  }
+  &::after {
+    inset: calc(var(--py) * -1);
+  }
+}
+.mark {
+  width: 20px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 4px solid var(--white);
+  grid-area: 1/1;
+  box-shadow: inset var(--shadow), var(--shadow);
+  translate: calc(var(--diff) * sin(var(--h))) calc(-1 * var(--diff) * cos(var(--h)));
+}
+.slider-blocks {
+  border-radius: calc(var(--bar-height) / 2);
+  overflow: hidden;
+  transform: translateY(calc(100% + var(--bar-height) / 4));
+  span {
+    height: var(--bar-height);
+    width: 1%;
+  }
+  &.saturation span {
+    background-color: hsl(var(--h), var(--i), var(--l));
+  }
+  &.lightness span {
+    background-color: hsl(var(--h), var(--s), var(--i));
+  }
+}

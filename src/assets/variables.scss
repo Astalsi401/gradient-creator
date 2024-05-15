@@ -1,0 +1,28 @@
+$theme-colors: (
+  light: (
+    "white": rgb(255, 255, 255),
+    "gray": rgb(204, 204, 204),
+    "black": rgb(0, 0, 0),
+  ),
+  dark: (
+    "white": rgb(255, 255, 255),
+    "gray": rgb(204, 204, 204),
+    "black": rgb(0, 0, 0),
+  ),
+);
+$theme-colors-rgb: (
+  light: (
+    "white": 255 255 255,
+    "gray": 204 204 204,
+    "black": 0 0 0,
+  ),
+  dark: (
+    "white": 255 255 255,
+    "gray": 204 204 204,
+    "black": 0 0 0,
+  ),
+);
+$theme-decoration-colors: (
+  light: (),
+  dark: (),
+);

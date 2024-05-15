@@ -1,0 +1,113 @@
+@import "./_basic.scss";
+/* color */
+@each $elem, $elem-value in $elements {
+  @each $color, $color-value in map-get($theme-colors, light) {
+    @include builder($elem-value, var(--#{$color}), #{$elem}-#{$color});
+  }
+}
+/* end of color */
+/* position */
+@each $pos in $position {
+  @include builder(position, $pos, position, $class-e: -$pos);
+}
+/* end of position */
+/* text decoration */
+@each $dec in $text-decoration {
+  @include builder(text-decoration, $dec, text-decoration, $class-e: -$dec);
+}
+/* end of text decoration */
+/* text align */
+@each $align in $text-align {
+  @include builder(text-align, $align, text, $class-e: -$align);
+}
+/* end of text-align */
+/* text weight */
+@each $weight in $text-weight {
+  @include builder(font-weight, $weight, text, $class-e: -$weight);
+}
+/* end of text weight */
+/* text size */
+@each $size, $size-value in $text-size {
+  @include builder(font-size, $size-value, text, $class-e: -$size);
+}
+/* end of text size */
+/* float */
+@each $float, $float-value in $float {
+  @include builder(float, $float-value, float, $class-e: -$float);
+}
+/* end of float */
+/* round */
+@each $round, $round-values in $rounded-edge {
+  @each $u, $u-value in $units {
+    $tmp: ();
+    @each $round-value in $round-values {
+      $tmp: append($tmp, border-#{$round-value}radius);
+    }
+    @if $u != auto {
+      @include builder($tmp, $u-value, if($round == "", rounded-#{$round}, rounded-#{$round}-), $class-e: $u, $imp: false);
+    }
+  }
+}
+/* end of round */
+/* overflow */
+@each $overflow-value in $overflow {
+  @include builder(overflow, $overflow-value, overflow-#{$overflow-value}, $imp: false);
+}
+/* end of overflow */
+/* border */
+@for $i from 0 through 5 {
+  @include builder(border-width, #{$i}px, border-#{$i}, $imp: false);
+}
+@each $bd-sty in $border-style {
+  @include builder(border-style, $bd-sty, border-#{$bd-sty}, $imp: false);
+}
+/* end of border */
+/* shadow */
+@each $shadow, $shadow-value in $shadows {
+  @include builder(box-shadow, 0 0 $shadow-value var(--black-300), if($shadow != "", shadow-#{$shadow}, shadow), $imp: false);
+}
+/* end of shadow */
+/* position value */
+@each $pos, $pos-value in $position-units {
+  @include builder($pos-value, 0, #{$pos}-0);
+}
+@each $fit in $object-fit {
+  @include builder(object-fit, $fit, "object-fit-#{$fit}");
+}
+@each $fit in $object-fit {
+  @include builder(background-size, $fit, "background-size-#{$fit}");
+}
+/* end of position value */
+.pointer {
+  cursor: pointer;
+}
+.container,
+.container-sm,
+.container-md,
+.container-lg,
+.container-xl,
+.container-xxl,
+.container-fluid {
+  width: 100%;
+  margin-inline: auto;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  & > * {
+    width: 100%;
+  }
+}
+
+@include basic();
+@each $screen, $screen-value in $screen-size {
+  @media (min-width: $screen-value) {
+    @include basic($screen);
+  }
+}
+.flex-grow-1 {
+  flex-grow: 1;
+}
+.ratio-16by9 {
+  aspect-ratio: 16 / 9;
+}

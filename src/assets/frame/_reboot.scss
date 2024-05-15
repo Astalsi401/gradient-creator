@@ -1,0 +1,41 @@
+:root {
+  @each $u, $u-value in $units {
+    --unit-#{$u}: #{$u-value};
+  }
+}
+@each $color-scheme in (light, dark) {
+  @media (prefers-color-scheme: $color-scheme) {
+    :root {
+      @each $colors in (map-get($theme-colors, $color-scheme), map-get($theme-decoration-colors, $color-scheme)) {
+        @each $color, $color-value in $colors {
+          --#{$color}: #{$color-value};
+        }
+      }
+      @each $color, $color-value in map-get($theme-colors-rgb, $color-scheme) {
+        @each $a, $a-value in $alpha {
+          --#{$color}-#{$a}: rgba(#{join(($color-value), (), comma)}, #{$a-value});
+        }
+      }
+      --invert: map-get($theme-invert, $color-scheme);
+    }
+  }
+  [data-theme="#{$color-scheme}"] {
+    @each $colors in (map-get($theme-colors, $color-scheme), map-get($theme-decoration-colors, $color-scheme)) {
+      @each $color, $color-value in $colors {
+        --#{$color}: #{$color-value};
+      }
+    }
+    @each $color, $color-value in map-get($theme-colors-rgb, $color-scheme) {
+      @each $a, $a-value in $alpha {
+        --#{$color}-#{$a}: rgba(#{join(($color-value), (), comma)}, #{$a-value});
+      }
+    }
+  }
+}
+*,
+::before,
+::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
