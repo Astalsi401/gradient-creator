@@ -6,9 +6,9 @@ import "./assets/main.scss";
 
 function App() {
   const defautlColor1 = { h: 0, saturation: 100, lightness: 50 };
-  const defautlColor2 = { h: 180, saturation: 100, lightness: 50 };
+  const defautlColor2 = { h: 270, saturation: 100, lightness: 50 };
   const [state, setState] = useState({
-    isDragging: false,
+    angle: 0,
     diff: 0,
     rotate: 0,
     currntID: 0,
@@ -23,10 +23,12 @@ function App() {
   const gradient = colors.length === 1 ? `hsl(${current.h}, ${current.saturation}%, ${current.lightness}%)` : `linear-gradient(${rotate}deg, ${colors.map(({ h, saturation: s, lightness: l }) => `hsl(${h}, ${s}%, ${l}%)`).join(", ")})`;
   const handleResize = () => {
     const hueR = hueRef.current.clientWidth / 2;
-    setState((prev) => ({ ...prev, diff: hueRef.current ? hueR : prev.diff, r: hueR }));
+    setState((prev) => ({ ...prev, diff: hueRef.current ? hueR : prev.diff, hueR }));
   };
   useEffect(() => {
+    handleResize();
     window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [hueRef.current]);
   return (
     <div className="container px-3">

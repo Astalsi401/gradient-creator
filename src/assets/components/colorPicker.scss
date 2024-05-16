@@ -1,3 +1,5 @@
+$z-index: (base, overlay, model);
+
 .hsl-color-picker {
   --shadow: 0 0 2px var(--black-600);
   --bar-height: 10px;
@@ -31,53 +33,73 @@
   }
 }
 .hue-container {
-  --py: 50px;
-  --px: 15px;
-  padding: var(--py) var(--px);
+  --px: 25px;
+  padding-inline: var(--px);
+  display: grid;
+  place-items: center;
 }
+.lightness,
 .hue {
-  width: min(100%, 400px);
+  grid-area: 1/1;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: conic-gradient(hsl(0, 100%, var(--l)), hsl(60, 100%, var(--l)), hsl(120, 100%, var(--l)), hsl(180, 100%, var(--l)), hsl(240, 100%, var(--l)), hsl(300, 100%, var(--l)), hsl(0, 100%, var(--l)));
   display: grid;
   place-items: center;
   position: relative;
+  cursor: pointer;
   &::before,
   &::after {
     content: "";
     position: absolute;
   }
-  &::before {
-    inset: 0;
-    background: radial-gradient(circle at 50% 50%, hsl(0, 0%, var(--l)), transparent);
-    border-radius: 50%;
-  }
-  &::after {
-    inset: calc(var(--py) * -1);
+  &.dragging {
+    cursor: none;
+    &::after {
+      position: fixed;
+      inset: 0;
+      z-index: index($z-index, model);
+    }
   }
 }
 .mark {
-  width: 20px;
+  width: calc(var(--px) - 5px);
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 4px solid var(--white);
-  grid-area: 1/1;
   box-shadow: inset var(--shadow), var(--shadow);
-  translate: calc(var(--diff) * sin(var(--h))) calc(-1 * var(--diff) * cos(var(--h)));
+  grid-area: 1/1;
 }
+.lightness {
+  width: calc(min(100%, 400px) + var(--px) * 2);
+  background: linear-gradient(180deg, hsl(var(--h), var(--s), 0%), hsl(var(--h), var(--s), 50%), hsl(var(--h), var(--s), 100%));
+  &::before {
+    cursor: default;
+    inset: calc(var(--px) / 2);
+    background-color: var(--white);
+    border-radius: 50%;
+    box-shadow: inset var(--shadow);
+  }
+  .mark {
+    background-color: var(--white);
+    translate: calc(calc(var(--hueR) + var(--px) * 0.75) * sin(var(--angle))) calc(-1 * calc(var(--hueR) + var(--px) * 0.75) * cos(var(--angle)));
+    box-shadow: var(--shadow);
+  }
+}
+.hue {
+  width: min(100%, 400px);
+  background: conic-gradient(hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(0, 100%, 50%));
+  &::before {
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, hsl(0, 0%, 50%), transparent);
+    border-radius: 50%;
+  }
+  .mark {
+    border: 4px solid var(--white);
+    translate: calc(var(--diff) * sin(var(--h))) calc(-1 * var(--diff) * cos(var(--h)));
+  }
+}
+
 .slider-blocks {
   border-radius: calc(var(--bar-height) / 2);
   overflow: hidden;
   transform: translateY(calc(100% + var(--bar-height) / 4));
-  span {
-    height: var(--bar-height);
-    width: 1%;
-  }
-  &.saturation span {
-    background-color: hsl(var(--h), var(--i), var(--l));
-  }
-  &.lightness span {
-    background-color: hsl(var(--h), var(--s), var(--i));
-  }
 }

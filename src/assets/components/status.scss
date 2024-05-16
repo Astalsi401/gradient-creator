@@ -3,6 +3,7 @@
   --w: 30px;
   width: var(--w);
   aspect-ratio: 1;
+  cursor: pointer;
 }
 .using-color {
   &.active {
