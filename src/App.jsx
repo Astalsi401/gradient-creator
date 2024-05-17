@@ -10,7 +10,7 @@ function App() {
   const [state, setState] = useState({
     angle: 0,
     diff: 0,
-    rotate: 0,
+    gradientAngle: 0,
     currntID: 0,
     colors: [
       { id: 0, ...defautlColor1 },
@@ -18,9 +18,9 @@ function App() {
     ],
   });
   const hueRef = useRef(null);
-  const { colors, currntID, rotate } = state;
+  const { colors, currntID, gradientAngle } = state;
   const current = colors.find((d) => d.id === currntID);
-  const gradient = colors.length === 1 ? `hsl(${current.h}, ${current.saturation}%, ${current.lightness}%)` : `linear-gradient(${rotate}deg, ${colors.map(({ h, saturation: s, lightness: l }) => `hsl(${h}, ${s}%, ${l}%)`).join(", ")})`;
+  const gradient = colors.length === 1 ? `hsl(${current.h}, ${current.saturation}%, ${current.lightness}%)` : `linear-gradient(${gradientAngle}deg, ${colors.map(({ h, saturation: s, lightness: l }) => `hsl(${h}, ${s}%, ${l}%)`).join(", ")})`;
   const handleResize = () => {
     const hueR = hueRef.current.clientWidth / 2;
     setState((prev) => ({ ...prev, diff: hueRef.current ? hueR : prev.diff, hueR }));
@@ -31,10 +31,12 @@ function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, [hueRef.current]);
   return (
-    <div className="container px-3">
+    <div className="container-fluid">
       <Gradient gradient={gradient} />
-      <UsingColors state={state} setState={setState} defautlColor1={defautlColor1} />
-      <ColorPicker hueRef={hueRef} current={current} state={state} setState={setState} />
+      <div className="container px-3">
+        <UsingColors state={state} setState={setState} defautlColor1={defautlColor1} />
+        <ColorPicker hueRef={hueRef} current={current} state={state} setState={setState} />
+      </div>
     </div>
   );
 }

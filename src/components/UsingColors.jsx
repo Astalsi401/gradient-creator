@@ -21,11 +21,27 @@ export default function UsingColors({ state, setState, defautlColor1 }) {
   };
   const { colors, currntID } = state;
   return (
-    <div className="using-colors my-3 d-flex align-items-center g-1">
-      {colors.map(({ id, h, saturation: s, lightness: l }) => (
-        <div key={id} title="Click to Select / Double Click to Delete" className={`using-color shadow-sm ${id === currntID ? "active" : ""}`} style={{ background: `hsl(${h}, ${s}%, ${l}%)` }} onClick={() => selectColor(id)} onDoubleClick={() => deleteColor(id)}></div>
-      ))}
-      <div title="Add Color" className="add-color" onClick={addColor}></div>
+    <>
+      <Setting text="Angle" name="gradientAngle" min={0} max={360} value={state.gradientAngle} change={({ target: { value } }) => setState((prev) => ({ ...prev, gradientAngle: Math.round(parseFloat(value)) }))} />
+      <div className="using-colors my-3 d-flex align-items-center g-1">
+        {colors.map(({ id, h, saturation: s, lightness: l }) => (
+          <div key={id} title="Click to Select / Double Click to Delete" className={`using-color shadow-sm ${id === currntID ? "active" : ""}`} style={{ background: `hsl(${h}, ${s}%, ${l}%)` }} onClick={() => selectColor(id)} onDoubleClick={() => deleteColor(id)}></div>
+        ))}
+        <div title="Add Color" className="add-color" onClick={addColor}></div>
+      </div>
+    </>
+  );
+}
+
+function Setting({ text, name, min, max, value, change }) {
+  return (
+    <div className="w-100 my-3" key={name}>
+      <div className="text-large">
+        {text}: <input className="py-2 px-2" name={name} type="number" min={min} max={max} value={value} onChange={change} />
+      </div>
+      <div className="my-1">
+        <input className="d-block w-100" name={name} type="range" min={min} max={max} value={value} onChange={change} />
+      </div>
     </div>
   );
 }

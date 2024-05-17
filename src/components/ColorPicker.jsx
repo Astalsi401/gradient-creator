@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 
 export default function ColorPicker({ hueRef, current, state, setState }) {
-  const { rotate, hueR } = state;
+  const { gradientAngle, hueR } = state;
   const { h, saturation, lightness } = current;
   const handleColorChange = ({ target: { value, name, min, max } }) => {
     const newValue = Math.round(parseFloat(value));
@@ -19,7 +19,6 @@ export default function ColorPicker({ hueRef, current, state, setState }) {
   };
   return (
     <div className="hsl-color-picker my-3" style={{ "--hueR": `${hueR}px`, "--h": `${h}deg`, "--s": `${saturation}%`, "--l": `${lightness}%` }}>
-      <Rotate name="rotate" min={0} max={360} value={rotate} change={({ target: { value } }) => setState((prev) => ({ ...prev, rotate: Math.round(parseFloat(value)) }))} />
       <div className="hue-container my-3">
         <Lightness current={current} state={state} setState={setState} calculateAngle={calculateAngle} handleColorChange={handleColorChange} />
         <Hue hueRef={hueRef} current={current} state={state} setState={setState} calculateAngle={calculateAngle} handleColorChange={handleColorChange} />
@@ -66,18 +65,6 @@ function Hue({ hueRef, current, state, setState, calculateAngle, handleColorChan
   return (
     <div title="Select Color" className={`hue mx-auto shadow-sm ${isDragging ? "dragging" : ""}`} ref={hueRef} style={{ "--diff": `${diff}px`, "--h": `${h}deg`, "--s": `${saturation}%`, "--l": `${lightness}%` }} onPointerDown={() => handleDrag(true)} onPointerUp={(e) => handleHueChange(e, false)} onPointerMove={(e) => hueRef.current && isDragging && handleHueChange(e, true)}>
       <div className="mark" />
-    </div>
-  );
-}
-function Rotate({ name, min, max, value, change }) {
-  return (
-    <div className="w-100 my-1" key={name}>
-      <div className="text-large">
-        {name}: <input className="py-2 px-2" name={name} type="number" min={min} max={max} value={value} onChange={change} />
-      </div>
-      <div className="my-1">
-        <input className="d-block w-100" name={name} type="range" min={min} max={max} value={value} onChange={change} />
-      </div>
     </div>
   );
 }

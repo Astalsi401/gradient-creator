@@ -1,6 +1,7 @@
 .gradient {
   width: 100%;
-  height: 150px;
+  height: 30vh;
+  min-height: 150px;
   background: var(--gradient);
   &:hover,
   &:has(.copy.active) {
@@ -12,14 +13,15 @@
 .copy {
   cursor: pointer;
   user-select: none;
+  width: min(100%, 350px);
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--time);
+  background-color: var(--white-600);
   .gradient-code {
-    transition: 0.2s;
+    transition: var(--time);
     position: relative;
-    background-color: var(--code-bg);
     &::before {
-      transition: 0.2s;
+      transition: var(--time);
       content: "Copied";
       position: absolute;
       inset: 0;
