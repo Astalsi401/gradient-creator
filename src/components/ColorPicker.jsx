@@ -1,63 +1,71 @@
-import { useEffect, useState, useRef } from "react";
+import { useLayoutEffect, useState, useRef } from "react";
+import { colorToMarks, pointToHueSaturation, pointToLightness } from "../wheel/wheel";
 
-export default function ColorPicker({ hueRef, current, wheel, setWheel, setChannels }) {
-  const { hueR } = wheel;
+// Measured radius of the hue disc; follows any layout change, not just window resizes.
+function useRadius(ref) {
+  const [radius, setRadius] = useState(0);
+  // Layout effect so the first paint already has the real radius (no mark flash at the center).
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setRadius(el.clientWidth / 2);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return radius;
+}
+
+export default function ColorPicker({ current, setChannels }) {
+  const hueRef = useRef(null);
+  const radius = useRadius(hueRef);
+  // The only other view state: which mirrored half of the lightness ring the user last dragged.
+  const [lightnessSide, setLightnessSide] = useState("right");
   const { h, s, l } = current;
-  const calculateAngle = (clientX, clientY) => {
-    const { left, top } = hueRef.current.getBoundingClientRect();
-    const center = { x: hueR + left, y: hueR + top };
-    const d1 = { x: 0, y: -hueR };
-    const d2 = { x: clientX - center.x, y: clientY - center.y };
-    const angle = (Math.atan2(d1.y, d1.x) - Math.atan2(d2.y, d2.x)) * (-180 / Math.PI);
-    let diff = Math.sqrt(d2.x ** 2 + d2.y ** 2);
-    diff = diff > hueR ? hueR : diff;
-    return { angle, diff, offsetY: Math.round(((1 - Math.cos((angle * Math.PI) / 180)) / 2) * 100) };
+  const { hueOffset, lightnessAngle } = colorToMarks(current, radius, lightnessSide);
+  // Pointer position relative to the shared center of the hue disc and lightness ring.
+  const toWheelPoint = (clientX, clientY) => {
+    const { left, top, width, height } = hueRef.current.getBoundingClientRect();
+    return { x: clientX - (left + width / 2), y: clientY - (top + height / 2) };
+  };
+  const pickHueSaturation = (clientX, clientY) => setChannels(pointToHueSaturation(toWheelPoint(clientX, clientY), radius));
+  const pickLightness = (clientX, clientY) => {
+    const { l, side } = pointToLightness(toWheelPoint(clientX, clientY));
+    setChannels({ l });
+    setLightnessSide(side);
   };
   return (
-    <div className="hsl-color-picker my-3" style={{ "--hueR": `${hueR}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` }}>
+    <div className="hsl-color-picker my-3" style={{ "--hueR": `${radius}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` }}>
       <div className="hue-container my-3">
-        <Lightness current={current} wheel={wheel} setWheel={setWheel} calculateAngle={calculateAngle} setChannels={setChannels} />
-        <Hue hueRef={hueRef} current={current} wheel={wheel} setWheel={setWheel} calculateAngle={calculateAngle} setChannels={setChannels} />
+        <Lightness angle={lightnessAngle} onPick={pickLightness} />
+        <Hue hueRef={hueRef} offset={hueOffset} onPick={pickHueSaturation} />
       </div>
     </div>
   );
 }
 
-function Lightness({ current, wheel, setWheel, calculateAngle, setChannels }) {
+function Lightness({ angle, onPick }) {
   const [isDragging, setIsDragging] = useState(false);
-  const lightnessRef = useRef(null);
-  const { id, l } = current;
-  const handleMove = (clientX, clientY) => {
-    const { angle, offsetY } = calculateAngle(clientX, clientY);
-    setChannels({ l: offsetY });
-    setWheel((prev) => ({ ...prev, angle }));
-  };
   const handleDrag = (clientX, clientY, isDragging) => {
     setIsDragging(isDragging);
-    handleMove(clientX, clientY);
+    onPick(clientX, clientY);
   };
-  const calculateLightnessAngle = () => setWheel((prev) => ({ ...prev, angle: Math.acos(1 - 2 * (l / 100)) * (180 / Math.PI) }));
-  useEffect(() => calculateLightnessAngle(), [id]);
   return (
-    <div ref={lightnessRef} className={`lightness shadow-sm ${isDragging ? "dragging" : ""}`} style={{ "--angle": `${wheel.angle}deg` }} onPointerDown={({ clientX, clientY }) => handleDrag(clientX, clientY, true)} onPointerUp={({ clientX, clientY }) => handleDrag(clientX, clientY, false)} onPointerMove={({ clientX, clientY }) => isDragging && handleMove(clientX, clientY)}>
+    <div className={`lightness shadow-sm ${isDragging ? "dragging" : ""}`} style={{ "--angle": `${angle}deg` }} onPointerDown={({ clientX, clientY }) => handleDrag(clientX, clientY, true)} onPointerUp={({ clientX, clientY }) => handleDrag(clientX, clientY, false)} onPointerMove={({ clientX, clientY }) => isDragging && onPick(clientX, clientY)}>
       <div className="mark" />
     </div>
   );
 }
 
-function Hue({ hueRef, current, wheel, setWheel, calculateAngle, setChannels }) {
+function Hue({ hueRef, offset, onPick }) {
   const [isDragging, setIsDragging] = useState(false);
-  const { diff, hueR } = wheel;
-  const { h, s, l } = current;
-  const handleDrag = (newIsDragging) => setIsDragging(newIsDragging);
-  const handleHueChange = ({ clientX, clientY }, isDragging) => {
-    const { angle, diff } = calculateAngle(clientX, clientY);
-    setWheel((prev) => ({ ...prev, diff }));
-    setChannels({ h: angle < 0 ? 360 + angle : angle, s: (diff / hueR) * 100 });
-    handleDrag(isDragging);
+  const handlePick = ({ clientX, clientY }, isDragging) => {
+    onPick(clientX, clientY);
+    setIsDragging(isDragging);
   };
   return (
-    <div title="Select Color" className={`hue mx-auto shadow-sm ${isDragging ? "dragging" : ""}`} ref={hueRef} style={{ "--diff": `${diff}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` }} onPointerDown={() => handleDrag(true)} onPointerUp={(e) => handleHueChange(e, false)} onPointerMove={(e) => hueRef.current && isDragging && handleHueChange(e, true)}>
+    <div title="Select Color" className={`hue mx-auto shadow-sm ${isDragging ? "dragging" : ""}`} ref={hueRef} style={{ "--diff": `${offset}px` }} onPointerDown={() => setIsDragging(true)} onPointerUp={(e) => handlePick(e, false)} onPointerMove={(e) => isDragging && handlePick(e, true)}>
       <div className="mark" />
     </div>
   );
