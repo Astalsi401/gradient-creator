@@ -5,4 +5,8 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig({
   plugins: [react()],
   base: "/gradient-creator/",
+  test: {
+    // Pure-function tests run in node; DOM tests opt in with `// @vitest-environment jsdom`.
+    setupFiles: ["./src/test/setup.js"],
+  },
 });
