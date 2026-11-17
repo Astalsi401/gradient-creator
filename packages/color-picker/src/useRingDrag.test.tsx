@@ -3,7 +3,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { useRef } from "react";
 import { render, fireEvent, cleanup } from "@testing-library/react";
 import useRingDrag, { type DragPhase } from "./useRingDrag.js";
-import type { Point } from "./wheel.js";
+import type { Point } from "./geometry.js";
 
 afterEach(cleanup);
 

@@ -1,12 +1,12 @@
 import { useLayoutEffect, useState, useRef, type CSSProperties, type RefObject } from "react";
 import type { Color } from "./color.js";
-import { colorToMarks, pointToHueSaturation, pointToLightness, type LightnessSide, type Point } from "./wheel.js";
+import { colorToMarks, pointToHueSaturation, pointToLightness, type LightnessSide, type Point } from "./geometry.js";
 import useRingDrag from "./useRingDrag.js";
 
-// Measured radius of the hue disc; follows any layout change, not just window resizes.
+// Measured radius of the Hue disc; follows any layout change, not just window resizes.
 function useRadius(ref: RefObject<HTMLElement>) {
   const [radius, setRadius] = useState(0);
-  // Layout effect so the first paint already has the real radius (no mark flash at the center).
+  // Layout effect so the first paint already has the real radius (no Mark flash at the center).
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
@@ -47,11 +47,11 @@ const classes = (...names: (string | false | undefined)[]) => names.filter(Boole
 export default function ColorPicker({ value, onChange, className, style, classNames = {}, styles = {}, labels }: ColorPickerProps) {
   const hueRef = useRef<HTMLDivElement>(null);
   const radius = useRadius(hueRef);
-  // The only other view state: which mirrored half of the lightness ring the user last dragged.
+  // The only other view state: which mirrored half of the Lightness ring the user last dragged.
   const [lightnessSide, setLightnessSide] = useState<LightnessSide>("right");
   const { h, s } = value;
   const { hueOffset, lightnessAngle } = colorToMarks(value, radius, lightnessSide);
-  // Both wheels share a center, so their center-relative points feed the geometry directly.
+  // The Hue disc and Lightness ring share a center, so their center-relative points feed the geometry directly.
   const pickHueSaturation = (point: Point) => onChange({ ...value, ...pointToHueSaturation(point, radius) });
   const pickLightness = (point: Point) => {
     const { l, side } = pointToLightness(point);
@@ -64,8 +64,8 @@ export default function ColorPicker({ value, onChange, className, style, classNa
       style={{ ...styles.root, ...style }}
     >
       <div className="hcp-layout">
-        <Lightness angle={lightnessAngle} hueRadius={radius} hue={h} saturation={s} onPoint={pickLightness} classNames={classNames} styles={styles} label={labels?.lightnessRing} />
-        <Hue hueRef={hueRef} offset={hueOffset} hue={h} onPoint={pickHueSaturation} classNames={classNames} styles={styles} label={labels?.hueDisc ?? DEFAULT_HUE_DISC_LABEL} />
+        <LightnessRing angle={lightnessAngle} hueRadius={radius} hue={h} saturation={s} onPoint={pickLightness} classNames={classNames} styles={styles} label={labels?.lightnessRing} />
+        <HueDisc hueRef={hueRef} offset={hueOffset} hue={h} onPoint={pickHueSaturation} classNames={classNames} styles={styles} label={labels?.hueDisc ?? DEFAULT_HUE_DISC_LABEL} />
       </div>
     </div>
   );
@@ -78,8 +78,8 @@ type PartProps = {
   label: string | undefined;
 };
 
-function Lightness({ angle, hueRadius, hue, saturation, onPoint, classNames, styles, label }: PartProps & { angle: number; hueRadius: number; hue: number; saturation: number }) {
-  // Its own ref (unlike Hue, whose ref the parent also uses to measure the radius).
+function LightnessRing({ angle, hueRadius, hue, saturation, onPoint, classNames, styles, label }: PartProps & { angle: number; hueRadius: number; hue: number; saturation: number }) {
+  // Its own ref (unlike HueDisc, whose ref the parent also uses to measure the radius).
   const ref = useRef<HTMLDivElement>(null);
   // The inner circle ends halfway between the hue rim and the ring's outer edge
   // (style.css insets it by half the band), so presses inside it miss the ring.
@@ -93,7 +93,7 @@ function Lightness({ angle, hueRadius, hue, saturation, onPoint, classNames, sty
   );
 }
 
-function Hue({ hueRef, offset, hue, onPoint, classNames, styles, label }: PartProps & { hueRef: RefObject<HTMLDivElement>; offset: number; hue: number }) {
+function HueDisc({ hueRef, offset, hue, onPoint, classNames, styles, label }: PartProps & { hueRef: RefObject<HTMLDivElement>; offset: number; hue: number }) {
   const { dragging, handlers } = useRingDrag(hueRef, onPoint);
   return (
     <div title={label} className={classes("hcp-hue-disc", dragging && "hcp-dragging", classNames.hueDisc)} ref={hueRef} style={styles.hueDisc} {...handlers}>
