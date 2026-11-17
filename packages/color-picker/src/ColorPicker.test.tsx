@@ -19,6 +19,24 @@ let lightnessRingWidth = 250;
 // The one place that knows the parts' class names.
 const isHueDisc = (el: Element) => el.classList.contains("hcp-hue-disc");
 const isLightnessRing = (el: Element) => el.classList.contains("hcp-lightness-ring");
+// The one place that knows the internal variables the stylesheet positions the Marks with.
+const POSITIONING_VARS = {
+  hue: "--_hcp-hue",
+  saturation: "--_hcp-saturation",
+  hueDiscRadius: "--_hcp-hue-disc-radius",
+  hueMarkDistance: "--_hcp-hue-mark-distance",
+  lightnessMarkAngle: "--_hcp-lightness-mark-angle",
+} as const;
+type PositioningVar = keyof typeof POSITIONING_VARS;
+// jsdom has no cascade, so a variable's value at an element is the nearest inline declaration
+// on it or an ancestor, which is how custom properties inherit.
+const positioning = (el: Element, name: PositioningVar) => {
+  for (let at: HTMLElement | null = el as HTMLElement; at; at = at.parentElement) {
+    const value = at.style.getPropertyValue(POSITIONING_VARS[name]);
+    if (value) return value;
+  }
+  return "";
+};
 const widthOf = (el: Element) => (isHueDisc(el) ? hueDiscWidth : isLightnessRing(el) ? lightnessRingWidth : 0);
 
 // ResizeObserver stand-in: `resize` changes the stubbed widths and notifies every observer.
@@ -124,26 +142,27 @@ describe("ColorPicker", () => {
   });
 
   it("moves both Marks when `value` changes", () => {
-    const { hueDisc, lightnessRing, update } = setup({ h: 10, s: 20, l: 50 });
-    expect(hueDisc.style.getPropertyValue("--diff")).toBe("20px"); // 20% of the radius
-    expect(lightnessRing.style.getPropertyValue("--angle")).toBe("90deg"); // halfway down the right half
+    const { hueMark, lightnessMark, update } = setup({ h: 10, s: 20, l: 50 });
+    expect(positioning(hueMark, "hueMarkDistance")).toBe("20px"); // 20% of the radius
+    expect(positioning(lightnessMark, "lightnessMarkAngle")).toBe("90deg"); // halfway down the right half
     update({ h: 10, s: 80, l: 0 });
-    expect(hueDisc.style.getPropertyValue("--diff")).toBe("80px");
-    expect(lightnessRing.style.getPropertyValue("--angle")).toBe("0deg"); // top
+    expect(positioning(hueMark, "hueMarkDistance")).toBe("80px");
+    expect(positioning(lightnessMark, "lightnessMarkAngle")).toBe("0deg"); // top
   });
 
   it("keeps the Lightness ring's Mark on the half that was last dragged", () => {
-    const { lightnessRing, update } = setup({ h: 10, s: 20, l: 50 });
+    const { lightnessRing, lightnessMark, update } = setup({ h: 10, s: 20, l: 50 });
     fireEvent.pointerDown(lightnessRing, at(-120, 0)); // left half
     fireEvent.pointerUp(lightnessRing, at(-120, 0));
     update({ h: 10, s: 20, l: 50 });
-    expect(lightnessRing.style.getPropertyValue("--angle")).toBe("270deg"); // halfway down the left half
+    expect(positioning(lightnessMark, "lightnessMarkAngle")).toBe("270deg"); // halfway down the left half
   });
 
   it("keeps picking accurate after the picker is resized", () => {
-    const { onChange, hueDisc, lightnessRing } = setup({ h: 10, s: 20, l: 50 });
+    const { onChange, hueDisc, lightnessRing, hueMark, lightnessMark } = setup({ h: 10, s: 20, l: 50 });
     resize(100, 150); // Hue disc radius 50, ring inner area ends at (50 + 75) / 2 = 62.5px
-    expect(hueDisc.style.getPropertyValue("--diff")).toBe("10px"); // 20% of the new radius
+    expect(positioning(hueMark, "hueMarkDistance")).toBe("10px");
+    expect(positioning(lightnessMark, "hueDiscRadius")).toBe("50px"); // 20% of the new radius
     fireEvent.pointerDown(hueDisc, at(25, 0)); // right, half the new radius
     fireEvent.pointerUp(hueDisc, at(25, 0));
     expect(onChange).toHaveBeenLastCalledWith({ h: 90, s: 50, l: 50 });
@@ -174,10 +193,6 @@ describe("ColorPicker", () => {
     expect([...root.classList]).toEqual(["hcp-color-picker", "my-3", "extra"]);
     expect(root.style.margin).toBe("4px");
     expect(root.style.opacity).toBe("0.5");
-    expect(root.style.getPropertyValue("--h")).toBe("10deg");
-    expect(root.style.getPropertyValue("--s")).toBe("20%");
-    expect(root.style.getPropertyValue("--l")).toBe("30%");
-    expect(root.style.getPropertyValue("--hueR")).toBe("100px");
   });
 
   it("appends each slot's `classNames` after that part's default hcp- class", () => {
@@ -221,22 +236,24 @@ describe("ColorPicker", () => {
     expect(parts.lightnessMark.style.padding).toBe("5px");
   });
 
-  it("keeps the Marks' positioning variables when consumer styles set the same ones", () => {
-    // Cast: these are internal variables, not part of CSSProperties, but nothing stops a consumer passing them.
-    const clobber = (...names: string[]) => Object.fromEntries(names.map((name) => [name, "999px"])) as CSSProperties;
-    const { root, hueDisc, lightnessRing } = setup(
-      { h: 10, s: 20, l: 50 },
-      {
-        style: clobber("--hueR", "--h", "--s", "--l"),
-        styles: { root: clobber("--hueR", "--h", "--s", "--l"), hueDisc: clobber("--diff"), lightnessRing: clobber("--angle") },
-      }
-    );
-    expect(root.style.getPropertyValue("--hueR")).toBe("100px");
-    expect(root.style.getPropertyValue("--h")).toBe("10deg");
-    expect(root.style.getPropertyValue("--s")).toBe("20%");
-    expect(root.style.getPropertyValue("--l")).toBe("50%");
-    expect(hueDisc.style.getPropertyValue("--diff")).toBe("20px");
-    expect(lightnessRing.style.getPropertyValue("--angle")).toBe("90deg");
+  // Cast: these are internal variables, not part of CSSProperties, but nothing stops a consumer passing them.
+  const clobberAll = Object.fromEntries(Object.values(POSITIONING_VARS).map((name) => [name, "999px"])) as CSSProperties;
+  it.each<[string, CustomisationProps]>([
+    ["style", { style: clobberAll }],
+    ["styles.root", { styles: { root: clobberAll } }],
+    ["styles.hueDisc", { styles: { hueDisc: clobberAll } }],
+    ["styles.lightnessRing", { styles: { lightnessRing: clobberAll } }],
+    ["styles.hueMark", { styles: { hueMark: clobberAll } }],
+    ["styles.lightnessMark", { styles: { lightnessMark: clobberAll } }],
+  ])("keeps the Marks' positioning variables when %s sets the same ones", (_, props) => {
+    const { hueMark, lightnessMark, lightnessRing } = setup({ h: 10, s: 20, l: 50 }, props);
+    expect(positioning(hueMark, "hue")).toBe("10deg");
+    expect(positioning(hueMark, "hueMarkDistance")).toBe("20px");
+    expect(positioning(lightnessMark, "hueDiscRadius")).toBe("100px");
+    expect(positioning(lightnessMark, "lightnessMarkAngle")).toBe("90deg");
+    // The Lightness ring's gradient is drawn in the picked hue and saturation.
+    expect(positioning(lightnessRing, "hue")).toBe("10deg");
+    expect(positioning(lightnessRing, "saturation")).toBe("20%");
   });
 
   it("lets root `style` win over `styles.root`", () => {

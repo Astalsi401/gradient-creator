@@ -34,8 +34,8 @@ export const pointToLightness = (point: Point): { l: number; side: LightnessSide
 };
 
 // Where the two marks sit for `color`, in the units of the SCSS variables:
-// `hueOffset` → `--diff` (px from the disc center, along the hue direction),
-// `lightnessAngle` → `--angle` (deg, clockwise from top, on the chosen side of the ring).
+// `hueOffset` → `--_hcp-hue-mark-distance` (px from the disc center, along the hue direction),
+// `lightnessAngle` → `--_hcp-lightness-mark-angle` (deg, clockwise from top, on the chosen side of the ring).
 export const colorToMarks = ({ s, l }: Color, radius: number, side: LightnessSide): Marks => {
   const theta = toDegrees(Math.acos(Math.min(1, Math.max(-1, 1 - (2 * l) / 100))));
   return {

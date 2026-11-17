@@ -14,10 +14,6 @@
   --_hcp-surface: var(--hcp-surface, #fff);
   --_hcp-shadow: var(--hcp-shadow, 0 0 4px rgb(0 0 0 / 0.6));
   --_hcp-outer-shadow: var(--hcp-outer-shadow, 0 0 0.25rem rgb(0 0 0 / 0.3));
-  /* Set inline by the component from the Color and the measured Hue disc radius. */
-  --hueR: 0px;
-  --h: 0deg;
-  --s: 0%;
 }
 .hcp-layout {
   padding-inline: var(--_hcp-ring-width);
@@ -57,11 +53,22 @@
   grid-area: 1/1;
 }
 
+/*
+ * Positioning variables: private, and set inline by the component on the very element that reads
+ * them (after any consumer style), so no consumer style on a part or an ancestor can move a Mark.
+ * The declarations below are only defaults for markup rendered without the component.
+ */
 .hcp-lightness-ring {
-  /* Set inline by the component: the Mark's angle, clockwise from the top. */
-  --angle: 0deg;
+  /* The picked hue and saturation, which the ring's gradient is drawn in. */
+  --_hcp-hue: 0deg;
+  --_hcp-saturation: 0%;
   width: calc(var(--_hcp-size) + var(--_hcp-ring-width) * 2);
-  background: linear-gradient(180deg, hsl(var(--h), var(--s), 0%), hsl(var(--h), var(--s), 50%), hsl(var(--h), var(--s), 100%));
+  background: linear-gradient(
+    180deg,
+    hsl(var(--_hcp-hue), var(--_hcp-saturation), 0%),
+    hsl(var(--_hcp-hue), var(--_hcp-saturation), 50%),
+    hsl(var(--_hcp-hue), var(--_hcp-saturation), 100%)
+  );
 }
 .hcp-lightness-ring::before {
   cursor: default;
@@ -71,16 +78,17 @@
   box-shadow: inset var(--_hcp-shadow);
 }
 .hcp-lightness-mark {
+  /* The measured Hue disc radius, and the Mark's angle clockwise from the top. */
+  --_hcp-hue-disc-radius: 0px;
+  --_hcp-lightness-mark-angle: 0deg;
   background-color: var(--_hcp-surface);
-  /* Centered on the band outside the inner area: radius + 3/4 of the band. */
-  translate: calc((var(--hueR) + var(--_hcp-ring-width) * 0.75) * sin(var(--angle)))
-    calc(-1 * (var(--hueR) + var(--_hcp-ring-width) * 0.75) * cos(var(--angle)));
+  /* Centered on the band outside the inner area: Hue disc radius + 3/4 of the band. */
+  translate: calc((var(--_hcp-hue-disc-radius) + var(--_hcp-ring-width) * 0.75) * sin(var(--_hcp-lightness-mark-angle)))
+    calc(-1 * (var(--_hcp-hue-disc-radius) + var(--_hcp-ring-width) * 0.75) * cos(var(--_hcp-lightness-mark-angle)));
   box-shadow: var(--_hcp-shadow);
 }
 
 .hcp-hue-disc {
-  /* Set inline by the component: the Mark's distance from the center. */
-  --diff: 0px;
   width: var(--_hcp-size);
   background: conic-gradient(
     hsl(0, 100%, 50%),
@@ -98,6 +106,10 @@
   border-radius: 50%;
 }
 .hcp-hue-mark {
+  /* The picked hue (the Mark's direction) and the Mark's distance from the center. */
+  --_hcp-hue: 0deg;
+  --_hcp-hue-mark-distance: 0px;
   border: 4px solid var(--_hcp-surface);
-  translate: calc(var(--diff) * sin(var(--h))) calc(-1 * var(--diff) * cos(var(--h)));
+  translate: calc(var(--_hcp-hue-mark-distance) * sin(var(--_hcp-hue)))
+    calc(-1 * var(--_hcp-hue-mark-distance) * cos(var(--_hcp-hue)));
 }
