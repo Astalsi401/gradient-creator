@@ -20,22 +20,23 @@ function useRadius(ref: RefObject<HTMLElement>) {
 }
 
 type ColorPickerProps = {
-  current: Color;
-  setChannels: (channels: Partial<Color>) => void;
+  value: Color;
+  // Always receives the complete new Color, never a partial one.
+  onChange: (color: Color) => void;
 };
 
-export default function ColorPicker({ current, setChannels }: ColorPickerProps) {
+export default function ColorPicker({ value, onChange }: ColorPickerProps) {
   const hueRef = useRef<HTMLDivElement>(null);
   const radius = useRadius(hueRef);
   // The only other view state: which mirrored half of the lightness ring the user last dragged.
   const [lightnessSide, setLightnessSide] = useState<LightnessSide>("right");
-  const { h, s, l } = current;
-  const { hueOffset, lightnessAngle } = colorToMarks(current, radius, lightnessSide);
+  const { h, s, l } = value;
+  const { hueOffset, lightnessAngle } = colorToMarks(value, radius, lightnessSide);
   // Both wheels share a center, so their center-relative points feed the geometry directly.
-  const pickHueSaturation = (point: Point) => setChannels(pointToHueSaturation(point, radius));
+  const pickHueSaturation = (point: Point) => onChange({ ...value, ...pointToHueSaturation(point, radius) });
   const pickLightness = (point: Point) => {
     const { l, side } = pointToLightness(point);
-    setChannels({ l });
+    onChange({ ...value, l });
     setLightnessSide(side);
   };
   return (

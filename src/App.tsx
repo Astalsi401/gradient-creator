@@ -11,7 +11,7 @@ function App() {
       <Gradient gradient={css} />
       <div className="container px-3">
         <UsingColors colors={palette.colors} currentId={palette.currentId} angle={palette.angle} onAdd={add} onRemove={remove} onSelect={select} onAngleChange={setAngle} />
-        <ColorPicker current={current} setChannels={setChannels} />
+        <ColorPicker value={current} onChange={setChannels} />
       </div>
     </div>
   );
