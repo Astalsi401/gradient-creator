@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent, type RefObject } from "react";
-import type { Point } from "./wheel";
+import type { Point } from "./geometry.js";
 
 export type DragPhase = "start" | "move" | "end";
 

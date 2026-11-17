@@ -1,0 +1,48 @@
+# Changesets release flow. On every push to main:
+# - while there are changesets, opens or updates a "Version Packages" PR that bumps versions
+#   and writes the changelog;
+# - once that PR is merged (no changesets left), publishes any package version that is not
+#   on npm yet. 0.1.0 was published by hand (#6), so the first run skips it.
+# The repo setting "Allow GitHub Actions to create and approve pull requests"
+# (Settings > Actions > General) must be on.
+name: Release
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write # push the version commit and release tags
+  pull-requests: write # open the Version Packages PR
+  id-token: write # npm trusted publishing (OIDC)
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          # Node 24 ships npm 11, which trusted publishing needs (npm >= 11.5.1).
+          node-version: 24
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
+      # Trusted publishing needs npm >= 11.5.1; don't rely on the version bundled with Node.
+      - run: npm install -g npm@latest
+      - run: npm ci
+      - uses: changesets/action@v2
+        # v2 reads its GitHub token from the `github-token` input, which defaults to
+        # `github.token` (see the action's action.yml), so no GITHUB_TOKEN env is needed. Its
+        # rights come from `permissions` above (contents and pull-requests: write).
+        with:
+          pr-title: "Version Packages"
+          commit-message: "mod: version packages"
+          version-script: npm run version-packages
+          # Builds and checks the package (publint, attw, packed files), then publishes.
+          publish-script: npm run release
+        # No NPM_TOKEN: npm authenticates through trusted publishing (OIDC, the id-token
+        # permission above) and adds provenance automatically. Trusted publishing can only be
+        # configured on a package that already exists, so 0.1.0 was published by hand and
+        # this repo's `release.yml` registered as the package's trusted publisher (#6).

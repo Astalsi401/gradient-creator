@@ -1,0 +1,20 @@
+{
+  // Compiler options shared by the app (tsconfig.json) and the Color picker package
+  // (packages/color-picker/tsconfig.json). Each adds only what is specific to it.
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "isolatedModules": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

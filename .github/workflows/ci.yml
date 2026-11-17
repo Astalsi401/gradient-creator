@@ -1,0 +1,28 @@
+# Checks every pull request and every push: lint, types, tests, the app build, and the
+# packed Color picker package (publint, attw and the packed file list fail the job).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "npm"
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Check the packed package
+        run: npm run check:package

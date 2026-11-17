@@ -1,20 +1,9 @@
 {
+  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "react-jsx",
-    "types": ["vite/client"],
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "isolatedModules": true,
-    "useDefineForClassFields": true,
-    "skipLibCheck": true,
-    "noEmit": true
+    // Resolve workspace packages to their TypeScript source (see vite.config.ts).
+    "customConditions": ["source"],
+    "types": ["vite/client"]
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "vitest.workspace.ts"]
 }

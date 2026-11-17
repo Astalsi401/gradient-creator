@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // NodeNext makes tsc reject extensionless relative imports, so the emitted .d.ts files
+    // resolve under Node's ESM rules as well as in bundlers (checked by attw).
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/test-setup.ts"]
+}
