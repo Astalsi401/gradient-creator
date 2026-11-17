@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState, useRef } from "react";
 import { colorToMarks, pointToHueSaturation, pointToLightness } from "../wheel/wheel";
+import useRingDrag from "../wheel/useRingDrag";
 
 // Measured radius of the hue disc; follows any layout change, not just window resizes.
 function useRadius(ref) {
@@ -24,48 +25,41 @@ export default function ColorPicker({ current, setChannels }) {
   const [lightnessSide, setLightnessSide] = useState("right");
   const { h, s, l } = current;
   const { hueOffset, lightnessAngle } = colorToMarks(current, radius, lightnessSide);
-  // Pointer position relative to the shared center of the hue disc and lightness ring.
-  const toWheelPoint = (clientX, clientY) => {
-    const { left, top, width, height } = hueRef.current.getBoundingClientRect();
-    return { x: clientX - (left + width / 2), y: clientY - (top + height / 2) };
-  };
-  const pickHueSaturation = (clientX, clientY) => setChannels(pointToHueSaturation(toWheelPoint(clientX, clientY), radius));
-  const pickLightness = (clientX, clientY) => {
-    const { l, side } = pointToLightness(toWheelPoint(clientX, clientY));
+  // Both wheels share a center, so their center-relative points feed the geometry directly.
+  const pickHueSaturation = (point) => setChannels(pointToHueSaturation(point, radius));
+  const pickLightness = (point) => {
+    const { l, side } = pointToLightness(point);
     setChannels({ l });
     setLightnessSide(side);
   };
   return (
     <div className="hsl-color-picker my-3" style={{ "--hueR": `${radius}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` }}>
       <div className="hue-container my-3">
-        <Lightness angle={lightnessAngle} onPick={pickLightness} />
-        <Hue hueRef={hueRef} offset={hueOffset} onPick={pickHueSaturation} />
+        <Lightness angle={lightnessAngle} hueRadius={radius} onPoint={pickLightness} />
+        <Hue hueRef={hueRef} offset={hueOffset} onPoint={pickHueSaturation} />
       </div>
     </div>
   );
 }
 
-function Lightness({ angle, onPick }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const handleDrag = (clientX, clientY, isDragging) => {
-    setIsDragging(isDragging);
-    onPick(clientX, clientY);
-  };
+function Lightness({ angle, hueRadius, onPoint }) {
+  // Its own ref (unlike Hue, whose ref the parent also uses to measure the radius).
+  const ref = useRef(null);
+  // The inner white circle ends halfway between the hue rim and the ring's outer edge
+  // (colorPicker.scss insets it by half the band), so presses inside it miss the ring.
+  const accepts = ({ x, y }) => Math.hypot(x, y) >= (hueRadius + ref.current.clientWidth / 2) / 2;
+  const { dragging, handlers } = useRingDrag(ref, onPoint, { accepts });
   return (
-    <div className={`lightness shadow-sm ${isDragging ? "dragging" : ""}`} style={{ "--angle": `${angle}deg` }} onPointerDown={({ clientX, clientY }) => handleDrag(clientX, clientY, true)} onPointerUp={({ clientX, clientY }) => handleDrag(clientX, clientY, false)} onPointerMove={({ clientX, clientY }) => isDragging && onPick(clientX, clientY)}>
+    <div ref={ref} className={`lightness shadow-sm ${dragging ? "dragging" : ""}`} style={{ "--angle": `${angle}deg` }} {...handlers}>
       <div className="mark" />
     </div>
   );
 }
 
-function Hue({ hueRef, offset, onPick }) {
-  const [isDragging, setIsDragging] = useState(false);
-  const handlePick = ({ clientX, clientY }, isDragging) => {
-    onPick(clientX, clientY);
-    setIsDragging(isDragging);
-  };
+function Hue({ hueRef, offset, onPoint }) {
+  const { dragging, handlers } = useRingDrag(hueRef, onPoint);
   return (
-    <div title="Select Color" className={`hue mx-auto shadow-sm ${isDragging ? "dragging" : ""}`} ref={hueRef} style={{ "--diff": `${offset}px` }} onPointerDown={() => setIsDragging(true)} onPointerUp={(e) => handlePick(e, false)} onPointerMove={(e) => isDragging && handlePick(e, true)}>
+    <div title="Select Color" className={`hue mx-auto shadow-sm ${dragging ? "dragging" : ""}`} ref={hueRef} style={{ "--diff": `${offset}px` }} {...handlers}>
       <div className="mark" />
     </div>
   );
