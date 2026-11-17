@@ -5,8 +5,13 @@ import react from "@vitejs/plugin-react-swc";
 export default defineConfig({
   plugins: [react()],
   base: "/gradient-creator/",
+  resolve: {
+    // Workspace packages export their TypeScript source under "source": the app runs
+    // and builds from it (with hot reload), so packages need no build first.
+    conditions: ["source"],
+  },
   test: {
-    // Pure-function tests run in node; DOM tests opt in with `// @vitest-environment jsdom`.
-    setupFiles: ["./src/test/setup.ts"],
+    // Workspace packages run their own tests (see vitest.workspace.ts).
+    include: ["src/**/*.test.{ts,tsx}"],
   },
 });

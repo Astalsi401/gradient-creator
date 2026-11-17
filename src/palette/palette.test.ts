@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { initialPalette, paletteReducer, toCss, colorToCss, type Color, type Palette, type PaletteColor } from "./palette";
+import { initialPalette, paletteReducer, toCss, colorToCss, type Palette, type PaletteColor } from "./palette";
+import type { Color } from "@astalsi401/hsl-color-picker";
 
 describe("colorToCss", () => {
   it("serializes one color as an hsl string", () => {

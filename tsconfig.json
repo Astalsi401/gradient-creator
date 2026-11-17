@@ -4,6 +4,8 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
+    // Resolve workspace packages to their TypeScript source (see vite.config.ts).
+    "customConditions": ["source"],
     "jsx": "react-jsx",
     "types": ["vite/client"],
     "strict": true,
@@ -16,5 +18,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["src", "vite.config.ts"]
+  "include": ["src", "vite.config.ts", "vitest.workspace.ts"]
 }

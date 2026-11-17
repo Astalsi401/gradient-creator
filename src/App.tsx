@@ -1,6 +1,6 @@
 import Gradient from "./components/Gradient";
 import UsingColors from "./components/UsingColors";
-import ColorPicker from "./components/ColorPicker";
+import { ColorPicker } from "@astalsi401/hsl-color-picker";
 import usePalette from "./palette/usePalette";
 import "./assets/main.scss";
 

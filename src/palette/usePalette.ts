@@ -1,5 +1,6 @@
 import { useMemo, useReducer } from "react";
-import { initialPalette, paletteReducer, toCss, type Color } from "./palette";
+import { initialPalette, paletteReducer, toCss } from "./palette";
+import type { Color } from "@astalsi401/hsl-color-picker";
 
 export default function usePalette() {
   const [palette, dispatch] = useReducer(paletteReducer, initialPalette);

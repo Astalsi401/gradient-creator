@@ -1,5 +1,6 @@
-// A Color is an HSL value; a PaletteColor is a Color placed in the Palette (see GLOSSARY.md).
-export type Color = { h: number; s: number; l: number };
+import type { Color } from "@astalsi401/hsl-color-picker";
+
+// A PaletteColor is a Color placed in the Palette (see GLOSSARY.md).
 export type Channel = keyof Color;
 export type PaletteColor = Color & { id: number };
 

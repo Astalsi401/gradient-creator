@@ -1,7 +1,7 @@
 import { useLayoutEffect, useState, useRef, type RefObject } from "react";
-import type { Color } from "../palette/palette";
-import { colorToMarks, pointToHueSaturation, pointToLightness, type LightnessSide, type Point } from "../wheel/wheel";
-import useRingDrag from "../wheel/useRingDrag";
+import type { Color } from "./color";
+import { colorToMarks, pointToHueSaturation, pointToLightness, type LightnessSide, type Point } from "./wheel";
+import useRingDrag from "./useRingDrag";
 
 // Measured radius of the hue disc; follows any layout change, not just window resizes.
 function useRadius(ref: RefObject<HTMLElement>) {
