@@ -2,6 +2,22 @@
   "name": "@astalsi401/hsl-color-picker",
   "version": "0.1.0",
   "description": "A React HSL color picker: a Hue disc inside a Lightness ring.",
+  "license": "MIT",
+  "author": "Astalsi401",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Astalsi401/gradient-creator.git",
+    "directory": "packages/color-picker"
+  },
+  "homepage": "https://github.com/Astalsi401/gradient-creator/tree/main/packages/color-picker#readme",
+  "bugs": "https://github.com/Astalsi401/gradient-creator/issues",
+  "keywords": [
+    "react",
+    "color-picker",
+    "hsl",
+    "color",
+    "picker"
+  ],
   "type": "module",
   "sideEffects": [
     "*.css"
@@ -22,22 +38,28 @@
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-dist.js",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:package": "publint --strict && attw --pack . --profile esm-only --exclude-entrypoints style.css && node scripts/check-pack.js"
   },
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "jsdom": "^31.0.1",
+    "publint": "^0.3.25",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "~5.6",
