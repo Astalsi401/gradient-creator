@@ -2,7 +2,7 @@
 # - while there are changesets, opens or updates a "Version Packages" PR that bumps versions
 #   and writes the changelog;
 # - once that PR is merged (no changesets left), publishes any package version that is not
-#   on npm yet. The first run publishes 0.1.0 this way.
+#   on npm yet. 0.1.0 was published by hand (#6), so the first run skips it.
 # The repo setting "Allow GitHub Actions to create and approve pull requests"
 # (Settings > Actions > General) must be on.
 name: Release
@@ -28,8 +28,9 @@ jobs:
           # Node 24 ships npm 11, which trusted publishing needs (npm >= 11.5.1).
           node-version: 24
           cache: "npm"
-          # Writes an .npmrc that reads the token from NODE_AUTH_TOKEN.
           registry-url: "https://registry.npmjs.org"
+      # Trusted publishing needs npm >= 11.5.1; don't rely on the version bundled with Node.
+      - run: npm install -g npm@latest
       - run: npm ci
       - uses: changesets/action@v2
         # v2 reads its GitHub token from the `github-token` input, which defaults to
@@ -41,12 +42,7 @@ jobs:
           version-script: npm run version-packages
           # Builds and checks the package (publint, attw, packed files), then publishes.
           publish-script: npm run release
-        env:
-          # Publish credentials (#6). Default: an npm granular access token with publish
-          # rights, stored as the NPM_TOKEN repo secret. The first publish needs it, because
-          # npm trusted publishing can only be configured on a package that already exists.
-          # Alternative: npm trusted publishing. On npmjs.com, add this repo and the
-          # `release.yml` workflow as the package's trusted publisher, then delete the
-          # NPM_TOKEN secret. npm then authenticates through OIDC (the id-token permission
-          # above), which it prefers over a token, and adds provenance automatically.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No NPM_TOKEN: npm authenticates through trusted publishing (OIDC, the id-token
+        # permission above) and adds provenance automatically. Trusted publishing can only be
+        # configured on a package that already exists, so 0.1.0 was published by hand and
+        # this repo's `release.yml` registered as the package's trusted publisher (#6).
