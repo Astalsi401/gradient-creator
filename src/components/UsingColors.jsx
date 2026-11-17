@@ -1,33 +1,14 @@
-export default function UsingColors({ state, setState, defautlColor1 }) {
-  const addColor = () => {
-    setState((prev) => {
-      const newId = Math.max(...prev.colors.map(({ id }) => id)) + 1;
-      return { ...prev, currntID: newId, colors: [...prev.colors, { id: newId, ...defautlColor1 }] };
-    });
-  };
-  const deleteColor = (id) => {
-    state.colors.length > 1 &&
-      setState((prev) => {
-        const newColors = prev.colors.filter((d) => id !== d.id);
-        return { ...prev, colors: newColors, currntID: newColors[newColors.length - 1].id };
-      });
-  };
-  const selectColor = (id) => {
-    setState((prev) => {
-      const { saturation } = prev.colors.find((d) => d.id === id);
-      const diff = (prev.hueR * saturation) / 100;
-      return { ...prev, diff, currntID: id };
-    });
-  };
-  const { colors, currntID } = state;
+import { colorToCss } from "../palette/palette";
+
+export default function UsingColors({ colors, currentId, angle, onAdd, onRemove, onSelect, onAngleChange }) {
   return (
     <>
-      <Setting text="Angle" name="gradientAngle" min={0} max={360} value={state.gradientAngle} change={({ target: { value } }) => setState((prev) => ({ ...prev, gradientAngle: Math.round(parseFloat(value)) }))} />
+      <Setting text="Angle" name="angle" min={0} max={360} value={angle} change={({ target: { value } }) => onAngleChange(value)} />
       <div className="using-colors my-3 d-flex align-items-center g-1">
-        {colors.map(({ id, h, saturation: s, lightness: l }) => (
-          <div key={id} title="Click to Select / Double Click to Delete" className={`using-color shadow-sm ${id === currntID ? "active" : ""}`} style={{ background: `hsl(${h}, ${s}%, ${l}%)` }} onClick={() => selectColor(id)} onDoubleClick={() => deleteColor(id)}></div>
+        {colors.map((color) => (
+          <div key={color.id} title="Click to Select / Double Click to Delete" className={`using-color shadow-sm ${color.id === currentId ? "active" : ""}`} style={{ background: colorToCss(color) }} onClick={() => onSelect(color.id)} onDoubleClick={() => onRemove(color.id)}></div>
         ))}
-        <div title="Add Color" className="add-color" onClick={addColor}></div>
+        <div title="Add Color" className="add-color" onClick={onAdd}></div>
       </div>
     </>
   );
