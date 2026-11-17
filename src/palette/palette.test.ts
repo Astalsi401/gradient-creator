@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { initialPalette, paletteReducer, toCss, colorToCss } from "./palette";
+import { initialPalette, paletteReducer, toCss, colorToCss, type Color, type Palette, type PaletteColor } from "./palette";
 
 describe("colorToCss", () => {
   it("serializes one color as an hsl string", () => {
-    expect(colorToCss({ id: 7, h: 12, s: 34, l: 56 })).toBe("hsl(12, 34%, 56%)");
+    const color: PaletteColor = { id: 7, h: 12, s: 34, l: 56 };
+    expect(colorToCss(color)).toBe("hsl(12, 34%, 56%)");
   });
 });
 
@@ -13,7 +14,7 @@ describe("toCss", () => {
   });
 
   it("serializes a single-color palette as a plain hsl color", () => {
-    const palette = { angle: 45, currentId: 3, colors: [{ id: 3, h: 120, s: 40, l: 30 }] };
+    const palette: Palette = { angle: 45, currentId: 3, colors: [{ id: 3, h: 120, s: 40, l: 30 }] };
     expect(toCss(palette)).toBe("hsl(120, 40%, 30%)");
   });
 });
@@ -30,7 +31,7 @@ describe("add", () => {
   });
 });
 
-const threeColors = {
+const threeColors: Palette = {
   angle: 0,
   currentId: 1,
   colors: [
@@ -54,7 +55,7 @@ describe("remove", () => {
   });
 
   it("does nothing when only one color remains", () => {
-    const single = { angle: 0, currentId: 5, colors: [{ id: 5, h: 10, s: 20, l: 30 }] };
+    const single: Palette = { angle: 0, currentId: 5, colors: [{ id: 5, h: 10, s: 20, l: 30 }] };
     expect(paletteReducer(single, { type: "remove", id: 5 })).toEqual(single);
   });
 });
@@ -80,7 +81,7 @@ describe("select", () => {
 
 describe("setAngle", () => {
   it("sets the gradient angle, rounding to a whole degree", () => {
-    expect(paletteReducer(threeColors, { type: "setAngle", value: "44.6" }).angle).toBe(45);
+    expect(paletteReducer(threeColors, { type: "setAngle", value: 44.6 }).angle).toBe(45);
   });
 
   it.each([
@@ -91,13 +92,13 @@ describe("setAngle", () => {
     expect(paletteReducer(threeColors, { type: "setAngle", value }).angle).toBe(expected);
   });
 
-  it.each(["", "   ", "abc", NaN, Infinity, -Infinity])("keeps the last valid angle when given %o", (value) => {
+  it.each([NaN, Infinity, -Infinity])("keeps the last valid angle when given %o", (value) => {
     const angled = { ...threeColors, angle: 120 };
     expect(paletteReducer(angled, { type: "setAngle", value })).toEqual(angled);
   });
 
   it("never serializes NaNdeg after the angle input is cleared", () => {
-    expect(toCss(paletteReducer(initialPalette, { type: "setAngle", value: "" }))).not.toContain("NaN");
+    expect(toCss(paletteReducer(initialPalette, { type: "setAngle", value: NaN }))).not.toContain("NaN");
   });
 });
 
@@ -115,7 +116,7 @@ describe("setChannels", () => {
     expect(paletteReducer(threeColors, { type: "setChannels", channels: { l: 20 } }).colors[1]).toEqual({ id: 1, h: 90, s: 100, l: 20 });
   });
 
-  const currentAfter = (channels) => paletteReducer(threeColors, { type: "setChannels", channels }).colors[1];
+  const currentAfter = (channels: Partial<Color>) => paletteReducer(threeColors, { type: "setChannels", channels }).colors[1];
 
   it.each([
     [{ h: 359.6 }, { h: 0 }],
@@ -133,7 +134,7 @@ describe("setChannels", () => {
 });
 
 describe("setChannels with invalid input", () => {
-  it.each(["", "abc", NaN, Infinity])("keeps the previous channel value when given %o", (value) => {
+  it.each([NaN, Infinity])("keeps the previous channel value when given %o", (value) => {
     const next = paletteReducer(threeColors, { type: "setChannels", channels: { l: value } });
     expect(next).toEqual(threeColors);
   });

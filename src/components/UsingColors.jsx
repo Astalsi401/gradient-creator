@@ -3,7 +3,7 @@ import { colorToCss } from "../palette/palette";
 export default function UsingColors({ colors, currentId, angle, onAdd, onRemove, onSelect, onAngleChange }) {
   return (
     <>
-      <Setting text="Angle" name="angle" min={0} max={360} value={angle} change={({ target: { value } }) => onAngleChange(value)} />
+      <Setting text="Angle" name="angle" min={0} max={360} value={angle} change={({ target: { valueAsNumber } }) => onAngleChange(valueAsNumber)} />
       <div className="using-colors my-3 d-flex align-items-center g-1">
         {colors.map((color) => (
           <div key={color.id} title="Click to Select / Double Click to Delete" className={`using-color shadow-sm ${color.id === currentId ? "active" : ""}`} style={{ background: colorToCss(color) }} onClick={() => onSelect(color.id)} onDoubleClick={() => onRemove(color.id)}></div>
