@@ -47,7 +47,7 @@ The picker is controlled: it shows `value` and calls `onChange` with the complet
 | `style`      | `CSSProperties`                                     | Inline style for the root element.                                                                  |
 | `classNames` | `Partial<Record<Slot, string>>`                     | Classes added to each [slot](#slots).                                                               |
 | `styles`     | `Partial<Record<Slot, CSSProperties>>`              | Inline styles for each [slot](#slots).                                                              |
-| `labels`     | `{ hueDisc?: string; lightnessRing?: string }`      | Hover text (`title`) of the Hue disc and Lightness ring. Defaults: `"Select Color"`, `"Select Lightness"`. |
+| `labels`     | `{ hueDisc?: string; lightnessRing?: string }`      | Hover text (`title`) of the Hue disc and Lightness ring. The Hue disc defaults to `"Select Color"`; the Lightness ring has no title unless you pass one. |
 
 Your classes are added after the default class of each part and never replace it. On the root, `className` comes after `classNames.root`, and `style` is merged over `styles.root`. Your inline styles never override the internal variables that position the Marks.
 
