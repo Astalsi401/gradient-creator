@@ -34,11 +34,12 @@ type ColorPickerProps = {
   style?: CSSProperties;
   classNames?: Partial<Record<Slot, string>>;
   styles?: Partial<Record<Slot, CSSProperties>>;
-  // Hover text of the two pickable parts; each falls back to its English default.
+  // Hover text of the two pickable parts. The Hue disc falls back to "Select Color";
+  // the Lightness ring has no title unless one is passed.
   labels?: { hueDisc?: string; lightnessRing?: string };
 };
 
-const DEFAULT_LABELS = { hueDisc: "Select Color", lightnessRing: "Select Lightness" };
+const DEFAULT_HUE_DISC_LABEL = "Select Color";
 
 // Default class first, consumer classes appended after it, never replacing it.
 const classes = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(" ");
@@ -64,8 +65,8 @@ export default function ColorPicker({ value, onChange, className, style, classNa
       style={{ ...styles.root, ...style, ...cssVars({ "--hueR": `${radius}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` }) }}
     >
       <div className="hcp-layout">
-        <Lightness angle={lightnessAngle} hueRadius={radius} onPoint={pickLightness} classNames={classNames} styles={styles} label={labels?.lightnessRing ?? DEFAULT_LABELS.lightnessRing} />
-        <Hue hueRef={hueRef} offset={hueOffset} onPoint={pickHueSaturation} classNames={classNames} styles={styles} label={labels?.hueDisc ?? DEFAULT_LABELS.hueDisc} />
+        <Lightness angle={lightnessAngle} hueRadius={radius} onPoint={pickLightness} classNames={classNames} styles={styles} label={labels?.lightnessRing} />
+        <Hue hueRef={hueRef} offset={hueOffset} onPoint={pickHueSaturation} classNames={classNames} styles={styles} label={labels?.hueDisc ?? DEFAULT_HUE_DISC_LABEL} />
       </div>
     </div>
   );
@@ -75,7 +76,7 @@ type PartProps = {
   onPoint: (point: Point) => void;
   classNames: Partial<Record<Slot, string>>;
   styles: Partial<Record<Slot, CSSProperties>>;
-  label: string;
+  label: string | undefined;
 };
 
 function Lightness({ angle, hueRadius, onPoint, classNames, styles, label }: PartProps & { angle: number; hueRadius: number }) {

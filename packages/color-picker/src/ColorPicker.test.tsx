@@ -245,10 +245,10 @@ describe("ColorPicker", () => {
     expect(root.style.margin).toBe("3px");
   });
 
-  it("labels the Hue disc and Lightness ring in English by default", () => {
+  it("labels the Hue disc in English by default and leaves the Lightness ring without a title", () => {
     const { hueDisc, lightnessRing } = setup({ h: 10, s: 20, l: 30 });
     expect(hueDisc.title).toBe("Select Color");
-    expect(lightnessRing.title).toBe("Select Lightness");
+    expect(lightnessRing.hasAttribute("title")).toBe(false);
   });
 
   it("replaces the default text with `labels`, part by part", () => {
