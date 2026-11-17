@@ -2,20 +2,23 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { useRef } from "react";
 import { render, fireEvent, cleanup } from "@testing-library/react";
-import useRingDrag from "./useRingDrag";
+import useRingDrag, { type DragPhase } from "./useRingDrag";
+import type { Point } from "./wheel";
 
 afterEach(cleanup);
 
 // A 200×200 element whose top-left corner sits at (100, 50): its center is (200, 150).
-const RECT = { left: 100, top: 50, width: 200, height: 200, right: 300, bottom: 250, x: 100, y: 50 };
+const RECT = { left: 100, top: 50, width: 200, height: 200, right: 300, bottom: 250, x: 100, y: 50 } as DOMRect;
 
-function Ring({ onPoint, accepts }) {
-  const ref = useRef(null);
+type Accepts = (point: Point) => boolean;
+
+function Ring({ onPoint, accepts }: { onPoint: (point: Point, phase: DragPhase) => void; accepts?: Accepts }) {
+  const ref = useRef<HTMLDivElement>(null);
   const { dragging, handlers } = useRingDrag(ref, onPoint, { accepts });
   return <div data-testid="ring" data-dragging={dragging} ref={ref} {...handlers} />;
 }
 
-const setup = (accepts) => {
+const setup = (accepts?: Accepts) => {
   const onPoint = vi.fn();
   const { getByTestId } = render(<Ring onPoint={onPoint} accepts={accepts} />);
   const ring = getByTestId("ring");
@@ -23,7 +26,7 @@ const setup = (accepts) => {
   return { onPoint, ring };
 };
 
-const at = (clientX, clientY, extra = {}) => ({ clientX, clientY, pointerId: 1, button: 0, ...extra });
+const at = (clientX: number, clientY: number, extra = {}) => ({ clientX, clientY, pointerId: 1, button: 0, ...extra });
 
 describe("useRingDrag", () => {
   it("reports the press immediately as 'start', relative to the element's center", () => {

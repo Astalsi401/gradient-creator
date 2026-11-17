@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { pointToHueSaturation, pointToLightness, colorToMarks } from "./wheel";
+import { pointToHueSaturation, pointToLightness, colorToMarks, type LightnessSide } from "./wheel";
+import type { Color } from "../palette/palette";
 
 describe("pointToHueSaturation", () => {
   it("measures hue clockwise from straight up (screen y points down)", () => {
@@ -71,12 +72,12 @@ describe("colorToMarks", () => {
 
 describe("color → marks → color round trip", () => {
   // Rebuilds where the marks sit on screen (same formulas as the SCSS translate) and reads the color back.
-  const markPoint = (offset, angleDeg) => {
+  const markPoint = (offset: number, angleDeg: number) => {
     const rad = (angleDeg * Math.PI) / 180;
     return { x: offset * Math.sin(rad), y: -offset * Math.cos(rad) };
   };
 
-  it.each([
+  it.each<[Color, LightnessSide]>([
     [{ h: 0, s: 100, l: 50 }, "right"],
     [{ h: 45, s: 30, l: 12 }, "right"],
     [{ h: 200, s: 75, l: 88 }, "left"],
