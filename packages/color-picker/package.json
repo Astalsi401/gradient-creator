@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "A React HSL color picker: a Hue disc inside a Lightness ring.",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
     "dist"
   ],
@@ -12,12 +14,16 @@
       "source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./style.css": {
+      "source": "./src/style.css",
+      "default": "./dist/style.css"
     }
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "vite build && tsc -p tsconfig.build.json",
+    "build": "vite build && tsc -p tsconfig.build.json && node scripts/check-dist.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },

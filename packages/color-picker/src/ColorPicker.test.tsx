@@ -1,21 +1,36 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from "vitest";
-import { render, fireEvent, cleanup } from "@testing-library/react";
+import { render, fireEvent, cleanup, act } from "@testing-library/react";
 import { ColorPicker, type Color } from "./index";
 
-afterEach(cleanup);
 
 // jsdom does no layout, so the picker's geometry is stubbed. Both parts share the center (200, 150):
 // the Hue disc is 200px wide (radius 100), the Lightness ring 250px wide. The ring's inner area
 // ends halfway between the disc rim and the ring's outer edge: (100 + 125) / 2 = 112.5px from center.
 const CENTER = { x: 200, y: 150 };
-const HUE_DISC_WIDTH = 200;
-const LIGHTNESS_RING_WIDTH = 250;
+// Widths can change mid-test (see `resize`), as when a consumer overrides `--hcp-size`.
+let hueDiscWidth = 200;
+let lightnessRingWidth = 250;
 
 // The one place that knows the parts' class names.
-const isHueDisc = (el: Element) => el.classList.contains("hue");
-const isLightnessRing = (el: Element) => el.classList.contains("lightness");
-const widthOf = (el: Element) => (isHueDisc(el) ? HUE_DISC_WIDTH : isLightnessRing(el) ? LIGHTNESS_RING_WIDTH : 0);
+const isHueDisc = (el: Element) => el.classList.contains("hcp-hue-disc");
+const isLightnessRing = (el: Element) => el.classList.contains("hcp-lightness-ring");
+const widthOf = (el: Element) => (isHueDisc(el) ? hueDiscWidth : isLightnessRing(el) ? lightnessRingWidth : 0);
+
+// ResizeObserver stand-in: `resize` changes the stubbed widths and notifies every observer.
+const resizeCallbacks = new Set<() => void>();
+const resize = (hueDisc: number, lightnessRing: number) => {
+  hueDiscWidth = hueDisc;
+  lightnessRingWidth = lightnessRing;
+  act(() => resizeCallbacks.forEach((callback) => callback()));
+};
+
+afterEach(() => {
+  cleanup();
+  resizeCallbacks.clear();
+  hueDiscWidth = 200;
+  lightnessRingWidth = 250;
+});
 
 const rectOfWidth = (width: number) => {
   const left = CENTER.x - width / 2;
@@ -40,9 +55,14 @@ beforeAll(() => {
   vi.stubGlobal(
     "ResizeObserver",
     class {
-      observe() {}
+      constructor(private callback: () => void) {}
+      observe() {
+        resizeCallbacks.add(this.callback);
+      }
       unobserve() {}
-      disconnect() {}
+      disconnect() {
+        resizeCallbacks.delete(this.callback);
+      }
     }
   );
 });
@@ -55,11 +75,12 @@ afterAll(() => {
 const setup = (value: Color) => {
   const onChange = vi.fn();
   const { container, rerender } = render(<ColorPicker value={value} onChange={onChange} />);
+  const root = container.firstElementChild as HTMLElement;
   const parts = Array.from(container.querySelectorAll("*"));
   const hueDisc = parts.find(isHueDisc) as HTMLElement;
   const lightnessRing = parts.find(isLightnessRing) as HTMLElement;
   const update = (next: Color) => rerender(<ColorPicker value={next} onChange={onChange} />);
-  return { onChange, hueDisc, lightnessRing, update };
+  return { onChange, root, hueDisc, lightnessRing, update };
 };
 
 // A pointer event at (dx, dy) px from the shared center.
@@ -111,5 +132,34 @@ describe("ColorPicker", () => {
     fireEvent.pointerUp(lightnessRing, at(-120, 0));
     update({ h: 10, s: 20, l: 50 });
     expect(lightnessRing.style.getPropertyValue("--angle")).toBe("270deg"); // halfway down the left half
+  });
+
+  it("keeps picking accurate after the picker is resized", () => {
+    const { onChange, hueDisc, lightnessRing } = setup({ h: 10, s: 20, l: 50 });
+    resize(100, 150); // Hue disc radius 50, ring inner area ends at (50 + 75) / 2 = 62.5px
+    expect(hueDisc.style.getPropertyValue("--diff")).toBe("10px"); // 20% of the new radius
+    fireEvent.pointerDown(hueDisc, at(25, 0)); // right, half the new radius
+    fireEvent.pointerUp(hueDisc, at(25, 0));
+    expect(onChange).toHaveBeenLastCalledWith({ h: 90, s: 50, l: 50 });
+    onChange.mockClear();
+    fireEvent.pointerDown(lightnessRing, at(60, 0)); // inside the new inner area
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.pointerDown(lightnessRing, at(70, 0)); // on the new band
+    expect(onChange).toHaveBeenLastCalledWith({ h: 10, s: 20, l: expect.closeTo(50) });
+  });
+
+  it("names each part with its own hcp- class", () => {
+    const { root, hueDisc, lightnessRing } = setup({ h: 10, s: 20, l: 30 });
+    expect(root.classList).toContain("hcp-color-picker");
+    expect(hueDisc.querySelectorAll(".hcp-hue-mark")).toHaveLength(1);
+    expect(lightnessRing.querySelectorAll(".hcp-lightness-mark")).toHaveLength(1);
+  });
+
+  it("renders only hcp- prefixed class names, also while dragging", () => {
+    const { root, hueDisc } = setup({ h: 10, s: 20, l: 30 });
+    fireEvent.pointerDown(hueDisc, at(0, 0));
+    const classes = [root, ...root.querySelectorAll("*")].flatMap((el) => [...el.classList]);
+    expect(classes).toContain("hcp-dragging");
+    expect(classes.filter((name) => !name.startsWith("hcp-"))).toEqual([]);
   });
 });
