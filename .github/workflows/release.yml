@@ -32,6 +32,9 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: npm ci
       - uses: changesets/action@v2
+        # v2 reads its GitHub token from the `github-token` input, which defaults to
+        # `github.token` (see the action's action.yml), so no GITHUB_TOKEN env is needed. Its
+        # rights come from `permissions` above (contents and pull-requests: write).
         with:
           pr-title: "Version Packages"
           commit-message: "mod: version packages"
