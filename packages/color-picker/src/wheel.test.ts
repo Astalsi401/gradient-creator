@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { pointToHueSaturation, pointToLightness, colorToMarks, type LightnessSide } from "./wheel";
-import type { Color } from "./color";
+import { pointToHueSaturation, pointToLightness, colorToMarks, type LightnessSide } from "./wheel.js";
+import type { Color } from "./color.js";
 
 describe("pointToHueSaturation", () => {
   it("measures hue clockwise from straight up (screen y points down)", () => {

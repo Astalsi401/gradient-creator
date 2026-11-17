@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from "vitest";
 import { render, fireEvent, cleanup, act } from "@testing-library/react";
 import type { ComponentProps, CSSProperties } from "react";
-import { ColorPicker, type Color } from "./index";
+import { ColorPicker, type Color } from "./index.js";
 
 // Everything but the controlled pair, which `setup` provides.
 type CustomisationProps = Omit<ComponentProps<typeof ColorPicker>, "value" | "onChange">;
