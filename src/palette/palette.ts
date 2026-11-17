@@ -31,6 +31,7 @@ export const initialPalette: Palette = {
 export const colorToCss = ({ h, s, l }: Color): string => `hsl(${h}, ${s}%, ${l}%)`;
 
 export const toCss = ({ angle, colors }: Palette): string =>
+  // Only reached with exactly one color, so colors[0] exists.
   colors.length === 1 ? colorToCss(colors[0]!) : `linear-gradient(${angle}deg, ${colors.map(colorToCss).join(", ")})`;
 
 const clamp = (n: number, min: number, max: number): number => Math.min(max, Math.max(min, n));

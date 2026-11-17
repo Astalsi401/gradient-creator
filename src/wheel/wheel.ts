@@ -2,7 +2,7 @@
 // Convention: angles start straight up at 0° and grow clockwise; screen y points down.
 import type { Color } from "../palette/palette";
 
-// A position relative to a wheel's center, in px.
+// A position relative to the center shared by the Hue disc and Lightness ring, in px.
 export type Point = { x: number; y: number };
 // Which mirrored half of the Lightness ring.
 export type LightnessSide = "left" | "right";
