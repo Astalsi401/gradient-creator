@@ -1,6 +1,6 @@
 // Color-wheel geometry: pure conversions between pointer positions and color channels.
 // Convention: angles start straight up at 0° and grow clockwise; screen y points down.
-import type { Color } from "./color";
+import type { Color } from "./color.js";
 
 // A position relative to the center shared by the Hue disc and Lightness ring, in px.
 export type Point = { x: number; y: number };

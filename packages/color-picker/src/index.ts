@@ -1,2 +1,2 @@
-export { default as ColorPicker } from "./ColorPicker";
-export type { Color } from "./color";
+export { default as ColorPicker } from "./ColorPicker.js";
+export type { Color } from "./color.js";
