@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, type MouseEvent } from "react";
 
-export default function Gradient({ gradient }) {
+export default function Gradient({ gradient }: { gradient: string }) {
   const [copyActive, setCopyActive] = useState(false);
-  const copy = (e) => {
+  const copy = (e: MouseEvent) => {
     e.preventDefault();
     navigator.clipboard.writeText(gradient);
     setCopyActive(true);

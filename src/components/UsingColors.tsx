@@ -1,6 +1,17 @@
-import { colorToCss } from "../palette/palette";
+import type { ChangeEvent } from "react";
+import { colorToCss, type PaletteColor } from "../palette/palette";
 
-export default function UsingColors({ colors, currentId, angle, onAdd, onRemove, onSelect, onAngleChange }) {
+type UsingColorsProps = {
+  colors: PaletteColor[];
+  currentId: number;
+  angle: number;
+  onAdd: () => void;
+  onRemove: (id: number) => void;
+  onSelect: (id: number) => void;
+  onAngleChange: (value: number) => void;
+};
+
+export default function UsingColors({ colors, currentId, angle, onAdd, onRemove, onSelect, onAngleChange }: UsingColorsProps) {
   return (
     <>
       <Setting text="Angle" name="angle" min={0} max={360} value={angle} change={({ target: { valueAsNumber } }) => onAngleChange(valueAsNumber)} />
@@ -14,7 +25,16 @@ export default function UsingColors({ colors, currentId, angle, onAdd, onRemove,
   );
 }
 
-function Setting({ text, name, min, max, value, change }) {
+type SettingProps = {
+  text: string;
+  name: string;
+  min: number;
+  max: number;
+  value: number;
+  change: (e: ChangeEvent<HTMLInputElement>) => void;
+};
+
+function Setting({ text, name, min, max, value, change }: SettingProps) {
   return (
     <div className="w-100 my-3" key={name}>
       <div className="text-large">
