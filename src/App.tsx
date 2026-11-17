@@ -13,9 +13,7 @@ function App() {
       <div className="container px-3">
         <UsingColors colors={palette.colors} currentId={palette.currentId} angle={palette.angle} onAdd={add} onRemove={remove} onSelect={select} onAngleChange={setAngle} />
         {/* The picker leaves outer spacing to its consumer. */}
-        <div className="my-3">
-          <ColorPicker value={current} onChange={setChannels} />
-        </div>
+        <ColorPicker className="my-3" value={current} onChange={setChannels} />
       </div>
     </div>
   );
