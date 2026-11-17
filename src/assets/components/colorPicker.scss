@@ -6,20 +6,6 @@ $z-index: (base, overlay, model);
   display: grid;
   place-items: center;
 }
-.current-color {
-  .display {
-    width: 45px;
-    height: 45px;
-    background-color: hsl(var(--h), var(--s), var(--l));
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .value {
-    flex-grow: 1;
-    outline: none;
-    text-align: center;
-  }
-}
 .lightness,
 .hue {
   grid-area: 1/1;
@@ -47,12 +33,19 @@ $z-index: (base, overlay, model);
   width: calc(var(--px) - 5px);
   aspect-ratio: 1;
   border-radius: 50%;
-  box-shadow: inset var(--shadow), var(--shadow);
+  box-shadow:
+    inset var(--shadow),
+    var(--shadow);
   grid-area: 1/1;
 }
 .lightness {
   width: calc(min(100%, 400px) + var(--px) * 2);
-  background: linear-gradient(180deg, hsl(var(--h), var(--s), 0%), hsl(var(--h), var(--s), 50%), hsl(var(--h), var(--s), 100%));
+  background: linear-gradient(
+    180deg,
+    hsl(var(--h), var(--s), 0%),
+    hsl(var(--h), var(--s), 50%),
+    hsl(var(--h), var(--s), 100%)
+  );
   &::before {
     cursor: default;
     inset: calc(var(--px) / 2);
@@ -62,20 +55,34 @@ $z-index: (base, overlay, model);
   }
   .mark {
     background-color: var(--white);
-    translate: calc(calc(var(--hueR) + var(--px) * 0.75) * sin(var(--angle))) calc(-1 * calc(var(--hueR) + var(--px) * 0.75) * cos(var(--angle)));
+    translate: calc(calc(var(--hueR) + var(--px) * 0.75) * sin(var(--angle)))
+      calc(-1 * calc(var(--hueR) + var(--px) * 0.75) * cos(var(--angle)));
     box-shadow: var(--shadow);
   }
 }
 .hue {
   width: min(100%, 400px);
-  background: conic-gradient(hsl(0, 100%, 50%), hsl(60, 100%, 50%), hsl(120, 100%, 50%), hsl(180, 100%, 50%), hsl(240, 100%, 50%), hsl(300, 100%, 50%), hsl(0, 100%, 50%));
+  background: conic-gradient(
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
+    hsl(0, 100%, 50%)
+  );
   &::before {
     inset: 0;
-    background: radial-gradient(circle at 50% 50%, hsl(0, 0%, 50%), transparent);
+    background: radial-gradient(
+      circle at 50% 50%,
+      hsl(0, 0%, 50%),
+      transparent
+    );
     border-radius: 50%;
   }
   .mark {
     border: 4px solid var(--white);
-    translate: calc(var(--diff) * sin(var(--h))) calc(-1 * var(--diff) * cos(var(--h)));
+    translate: calc(var(--diff) * sin(var(--h)))
+      calc(-1 * var(--diff) * cos(var(--h)));
   }
 }
