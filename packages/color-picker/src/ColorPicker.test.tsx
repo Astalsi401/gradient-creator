@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from "vitest";
 import { render, fireEvent, cleanup, act } from "@testing-library/react";
+import type { ComponentProps, CSSProperties } from "react";
 import { ColorPicker, type Color } from "./index";
+
+// Everything but the controlled pair, which `setup` provides.
+type CustomisationProps = Omit<ComponentProps<typeof ColorPicker>, "value" | "onChange">;
 
 
 // jsdom does no layout, so the picker's geometry is stubbed. Both parts share the center (200, 150):
@@ -72,15 +76,17 @@ afterAll(() => {
   vi.unstubAllGlobals();
 });
 
-const setup = (value: Color) => {
+const setup = (value: Color, props: CustomisationProps = {}) => {
   const onChange = vi.fn();
-  const { container, rerender } = render(<ColorPicker value={value} onChange={onChange} />);
+  const { container, rerender } = render(<ColorPicker value={value} onChange={onChange} {...props} />);
   const root = container.firstElementChild as HTMLElement;
   const parts = Array.from(container.querySelectorAll("*"));
   const hueDisc = parts.find(isHueDisc) as HTMLElement;
   const lightnessRing = parts.find(isLightnessRing) as HTMLElement;
-  const update = (next: Color) => rerender(<ColorPicker value={next} onChange={onChange} />);
-  return { onChange, root, hueDisc, lightnessRing, update };
+  const hueMark = hueDisc.firstElementChild as HTMLElement;
+  const lightnessMark = lightnessRing.firstElementChild as HTMLElement;
+  const update = (next: Color) => rerender(<ColorPicker value={next} onChange={onChange} {...props} />);
+  return { onChange, root, hueDisc, lightnessRing, hueMark, lightnessMark, update };
 };
 
 // A pointer event at (dx, dy) px from the shared center.
@@ -161,5 +167,109 @@ describe("ColorPicker", () => {
     const classes = [root, ...root.querySelectorAll("*")].flatMap((el) => [...el.classList]);
     expect(classes).toContain("hcp-dragging");
     expect(classes.filter((name) => !name.startsWith("hcp-"))).toEqual([]);
+  });
+
+  it("puts `className` and `style` on the root, alongside its defaults", () => {
+    const { root } = setup({ h: 10, s: 20, l: 30 }, { className: "my-3 extra", style: { margin: "4px", opacity: 0.5 } });
+    expect([...root.classList]).toEqual(["hcp-color-picker", "my-3", "extra"]);
+    expect(root.style.margin).toBe("4px");
+    expect(root.style.opacity).toBe("0.5");
+    expect(root.style.getPropertyValue("--h")).toBe("10deg");
+    expect(root.style.getPropertyValue("--s")).toBe("20%");
+    expect(root.style.getPropertyValue("--l")).toBe("30%");
+    expect(root.style.getPropertyValue("--hueR")).toBe("100px");
+  });
+
+  it("appends each slot's `classNames` after that part's default hcp- class", () => {
+    const parts = setup(
+      { h: 10, s: 20, l: 30 },
+      {
+        className: "outer",
+        classNames: { root: "r", hueDisc: "hd", lightnessRing: "lr", hueMark: "hm", lightnessMark: "lm" },
+      }
+    );
+    expect([...parts.root.classList]).toEqual(["hcp-color-picker", "r", "outer"]);
+    expect([...parts.hueDisc.classList]).toEqual(["hcp-hue-disc", "hd"]);
+    expect([...parts.lightnessRing.classList]).toEqual(["hcp-lightness-ring", "lr"]);
+    expect([...parts.hueMark.classList]).toEqual(["hcp-hue-mark", "hm"]);
+    expect([...parts.lightnessMark.classList]).toEqual(["hcp-lightness-mark", "lm"]);
+  });
+
+  it("keeps the slot classes while dragging", () => {
+    const { hueDisc } = setup({ h: 10, s: 20, l: 30 }, { classNames: { hueDisc: "hd" } });
+    fireEvent.pointerDown(hueDisc, at(0, 0));
+    expect([...hueDisc.classList]).toEqual(["hcp-hue-disc", "hcp-dragging", "hd"]);
+  });
+
+  it("applies each slot's `styles` to its part", () => {
+    const parts = setup(
+      { h: 10, s: 20, l: 30 },
+      {
+        styles: {
+          root: { padding: "1px" },
+          hueDisc: { padding: "2px" },
+          lightnessRing: { padding: "3px" },
+          hueMark: { padding: "4px" },
+          lightnessMark: { padding: "5px" },
+        },
+      }
+    );
+    expect(parts.root.style.padding).toBe("1px");
+    expect(parts.hueDisc.style.padding).toBe("2px");
+    expect(parts.lightnessRing.style.padding).toBe("3px");
+    expect(parts.hueMark.style.padding).toBe("4px");
+    expect(parts.lightnessMark.style.padding).toBe("5px");
+  });
+
+  it("keeps the Marks' positioning variables when consumer styles set the same ones", () => {
+    // Cast: these are internal variables, not part of CSSProperties, but nothing stops a consumer passing them.
+    const clobber = (...names: string[]) => Object.fromEntries(names.map((name) => [name, "999px"])) as CSSProperties;
+    const { root, hueDisc, lightnessRing } = setup(
+      { h: 10, s: 20, l: 50 },
+      {
+        style: clobber("--hueR", "--h", "--s", "--l"),
+        styles: { root: clobber("--hueR", "--h", "--s", "--l"), hueDisc: clobber("--diff"), lightnessRing: clobber("--angle") },
+      }
+    );
+    expect(root.style.getPropertyValue("--hueR")).toBe("100px");
+    expect(root.style.getPropertyValue("--h")).toBe("10deg");
+    expect(root.style.getPropertyValue("--s")).toBe("20%");
+    expect(root.style.getPropertyValue("--l")).toBe("50%");
+    expect(hueDisc.style.getPropertyValue("--diff")).toBe("20px");
+    expect(lightnessRing.style.getPropertyValue("--angle")).toBe("90deg");
+  });
+
+  it("lets root `style` win over `styles.root`", () => {
+    const { root } = setup({ h: 10, s: 20, l: 30 }, { style: { padding: "1px" }, styles: { root: { padding: "2px", margin: "3px" } } });
+    expect(root.style.padding).toBe("1px");
+    expect(root.style.margin).toBe("3px");
+  });
+
+  it("labels the Hue disc and Lightness ring in English by default", () => {
+    const { hueDisc, lightnessRing } = setup({ h: 10, s: 20, l: 30 });
+    expect(hueDisc.title).toBe("Select Color");
+    expect(lightnessRing.title).toBe("Select Lightness");
+  });
+
+  it("replaces the default text with `labels`, part by part", () => {
+    const both = setup({ h: 10, s: 20, l: 30 }, { labels: { hueDisc: "Farbe wählen", lightnessRing: "Helligkeit wählen" } });
+    expect(both.hueDisc.title).toBe("Farbe wählen");
+    expect(both.lightnessRing.title).toBe("Helligkeit wählen");
+    cleanup();
+    const one = setup({ h: 10, s: 20, l: 30 }, { labels: { lightnessRing: "Helligkeit wählen" } });
+    expect(one.hueDisc.title).toBe("Select Color");
+    expect(one.lightnessRing.title).toBe("Helligkeit wählen");
+  });
+
+  it("rejects unknown slot and label keys at type level", () => {
+    // Checked by `npm run typecheck`: each line must be a type error, or the directive itself fails.
+    const value = { h: 10, s: 20, l: 30 };
+    const onChange = () => {};
+    // @ts-expect-error unknown slot
+    void (<ColorPicker value={value} onChange={onChange} classNames={{ hue: "x" }} />);
+    // @ts-expect-error unknown slot
+    void (<ColorPicker value={value} onChange={onChange} styles={{ mark: {} }} />);
+    // @ts-expect-error only the Hue disc and Lightness ring have labels
+    void (<ColorPicker value={value} onChange={onChange} labels={{ hueMark: "x" }} />);
   });
 });

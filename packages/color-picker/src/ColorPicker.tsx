@@ -23,13 +23,27 @@ function useRadius(ref: RefObject<HTMLElement>) {
 // augmentation of React's CSSProperties, so installing the package changes no one's types.
 const cssVars = (vars: Record<`--${string}`, string>) => vars as CSSProperties;
 
+// Customisable parts, named after the glossary terms. Renaming one is a breaking change (ADR 0001).
+type Slot = "root" | "hueDisc" | "lightnessRing" | "hueMark" | "lightnessMark";
+
 type ColorPickerProps = {
   value: Color;
   // Always receives the complete new Color, never a partial one.
   onChange: (color: Color) => void;
+  className?: string;
+  style?: CSSProperties;
+  classNames?: Partial<Record<Slot, string>>;
+  styles?: Partial<Record<Slot, CSSProperties>>;
+  // Hover text of the two pickable parts; each falls back to its English default.
+  labels?: { hueDisc?: string; lightnessRing?: string };
 };
 
-export default function ColorPicker({ value, onChange }: ColorPickerProps) {
+const DEFAULT_LABELS = { hueDisc: "Select Color", lightnessRing: "Select Lightness" };
+
+// Default class first, consumer classes appended after it, never replacing it.
+const classes = (...names: (string | false | undefined)[]) => names.filter(Boolean).join(" ");
+
+export default function ColorPicker({ value, onChange, className, style, classNames = {}, styles = {}, labels }: ColorPickerProps) {
   const hueRef = useRef<HTMLDivElement>(null);
   const radius = useRadius(hueRef);
   // The only other view state: which mirrored half of the lightness ring the user last dragged.
@@ -44,16 +58,27 @@ export default function ColorPicker({ value, onChange }: ColorPickerProps) {
     setLightnessSide(side);
   };
   return (
-    <div className="hcp-color-picker" style={cssVars({ "--hueR": `${radius}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` })}>
+    <div
+      className={classes("hcp-color-picker", classNames.root, className)}
+      // Internal variables last, so a consumer style can never drop them.
+      style={{ ...styles.root, ...style, ...cssVars({ "--hueR": `${radius}px`, "--h": `${h}deg`, "--s": `${s}%`, "--l": `${l}%` }) }}
+    >
       <div className="hcp-layout">
-        <Lightness angle={lightnessAngle} hueRadius={radius} onPoint={pickLightness} />
-        <Hue hueRef={hueRef} offset={hueOffset} onPoint={pickHueSaturation} />
+        <Lightness angle={lightnessAngle} hueRadius={radius} onPoint={pickLightness} classNames={classNames} styles={styles} label={labels?.lightnessRing ?? DEFAULT_LABELS.lightnessRing} />
+        <Hue hueRef={hueRef} offset={hueOffset} onPoint={pickHueSaturation} classNames={classNames} styles={styles} label={labels?.hueDisc ?? DEFAULT_LABELS.hueDisc} />
       </div>
     </div>
   );
 }
 
-function Lightness({ angle, hueRadius, onPoint }: { angle: number; hueRadius: number; onPoint: (point: Point) => void }) {
+type PartProps = {
+  onPoint: (point: Point) => void;
+  classNames: Partial<Record<Slot, string>>;
+  styles: Partial<Record<Slot, CSSProperties>>;
+  label: string;
+};
+
+function Lightness({ angle, hueRadius, onPoint, classNames, styles, label }: PartProps & { angle: number; hueRadius: number }) {
   // Its own ref (unlike Hue, whose ref the parent also uses to measure the radius).
   const ref = useRef<HTMLDivElement>(null);
   // The inner circle ends halfway between the hue rim and the ring's outer edge
@@ -62,17 +87,17 @@ function Lightness({ angle, hueRadius, onPoint }: { angle: number; hueRadius: nu
   const accepts = ({ x, y }: Point) => Math.hypot(x, y) >= (hueRadius + ref.current!.clientWidth / 2) / 2;
   const { dragging, handlers } = useRingDrag(ref, onPoint, { accepts });
   return (
-    <div ref={ref} className={`hcp-lightness-ring${dragging ? " hcp-dragging" : ""}`} style={cssVars({ "--angle": `${angle}deg` })} {...handlers}>
-      <div className="hcp-lightness-mark" />
+    <div title={label} ref={ref} className={classes("hcp-lightness-ring", dragging && "hcp-dragging", classNames.lightnessRing)} style={{ ...styles.lightnessRing, ...cssVars({ "--angle": `${angle}deg` }) }} {...handlers}>
+      <div className={classes("hcp-lightness-mark", classNames.lightnessMark)} style={styles.lightnessMark} />
     </div>
   );
 }
 
-function Hue({ hueRef, offset, onPoint }: { hueRef: RefObject<HTMLDivElement>; offset: number; onPoint: (point: Point) => void }) {
+function Hue({ hueRef, offset, onPoint, classNames, styles, label }: PartProps & { hueRef: RefObject<HTMLDivElement>; offset: number }) {
   const { dragging, handlers } = useRingDrag(hueRef, onPoint);
   return (
-    <div title="Select Color" className={`hcp-hue-disc${dragging ? " hcp-dragging" : ""}`} ref={hueRef} style={cssVars({ "--diff": `${offset}px` })} {...handlers}>
-      <div className="hcp-hue-mark" />
+    <div title={label} className={classes("hcp-hue-disc", dragging && "hcp-dragging", classNames.hueDisc)} ref={hueRef} style={{ ...styles.hueDisc, ...cssVars({ "--diff": `${offset}px` }) }} {...handlers}>
+      <div className={classes("hcp-hue-mark", classNames.hueMark)} style={styles.hueMark} />
     </div>
   );
 }
